@@ -919,18 +919,19 @@
       },
 
       getRequest: function (json, defaultValue, isRaw) {  // JSON5 兜底，减少修改范围  , isSingle) {
-        var s = isRaw != true && isSingle ? this.switchQuote(json) : json; // this.toDoubleJSON(json, defaultValue);
-        if (StringUtil.isEmpty(s, true)) {
-          return defaultValue
-        }
-        try {
-          return jsonlint.parse(s);
-        }
-        catch (e) {
-          log('main.getRequest', 'try { return jsonlint.parse(s); \n } catch (e2) {\n' + e.message)
-          log('main.getRequest', 'return jsonlint.parse(this.removeComment(s));')
-          return JSON5.parse(s);  // jsonlint.parse(this.removeComment(s));
-        }
+        return json;
+        // var s = isRaw != true && isSingle ? this.switchQuote(json) : json; // this.toDoubleJSON(json, defaultValue);
+        // if (StringUtil.isEmpty(s, true)) {
+        //   return defaultValue
+        // }
+        // try {
+        //   return jsonlint.parse(s);
+        // }
+        // catch (e) {
+        //   log('main.getRequest', 'try { return jsonlint.parse(s); \n } catch (e2) {\n' + e.message)
+        //   log('main.getRequest', 'return jsonlint.parse(this.removeComment(s));')
+        //   return JSON5.parse(s);  // jsonlint.parse(this.removeComment(s));
+        // }
       },
       getExtraComment: function(json) {
         var it = json != null ? json : StringUtil.trim(vInput.value);
@@ -3260,9 +3261,9 @@
             }
           }
 
-          this.showUrl(isAdminOperation, '/login')
+          // this.showUrl(isAdminOperation, '/login')
 
-          vInput.value = JSON.stringify(req, null, '    ')
+          // vInput.value = JSON.stringify(req, null, '    ')
           this.type = REQUEST_TYPE_JSON
           this.showTestCase(false, this.isLocalShow)
           this.onChange(false)
@@ -3478,9 +3479,16 @@
             log('onHandle  before = \n' + before);
 
             var json = isSingle ? this.switchQuote(before) : before;
+            var arg = {}
             try {
-              afterObj = jsonlint.parse(json);
-              after = JSON.stringify(afterObj, null, "    ");
+              afterObj = {
+                sql: json,
+                arg: arg
+              }
+
+              //FIXME 用前端的 SQL Parser 库
+              // afterObj = jsonlint.parse(json);
+              // after = JSON.stringify(afterObj, null, "    ");
               before = isSingle ? this.switchQuote(after) : after;
             }
             catch (e) {
@@ -3488,8 +3496,13 @@
               log('main.onHandle', 'return jsonlint.parse(this.removeComment(before));')
 
               try {
-                afterObj = JSON5.parse(json);  // jsonlint.parse(this.removeComment(before));
-                after = JSON.stringify(afterObj, null, "    ");
+                afterObj = {
+                  sql: json,
+                  arg: arg
+                }
+
+                // afterObj = JSON5.parse(json);  // jsonlint.parse(this.removeComment(before));
+                // after = JSON.stringify(afterObj, null, "    ");
               } catch (e2) {
                 throw new Error('请求 JSON 格式错误！请检查并编辑请求！\n\n如果JSON中有注释，请 手动删除 或 点击左边的 \'/" 按钮 来去掉。\n\n' + e.message + '\n\n' + e2.message)
               }
@@ -3505,24 +3518,24 @@
               }
             }
 
-            var selectionStart = vInput.selectionStart
-            var selectionEnd = vInput.selectionEnd
-            vInput.value = before
-              + '\n\n\n                                                                                                       '
-              + '                                                                                                       \n';  //解决遮挡
-
-            vInput.selectionStart = selectionStart
-            vInput.selectionEnd = selectionEnd
-            vInput.setSelectionRange(selectionStart, selectionEnd)
+            // var selectionStart = vInput.selectionStart
+            // var selectionEnd = vInput.selectionEnd
+            // vInput.value = before
+            //   + '\n\n\n                                                                                                       '
+            //   + '                                                                                                       \n';  //解决遮挡
+            //
+            // vInput.selectionStart = selectionStart
+            // vInput.selectionEnd = selectionEnd
+            // vInput.setSelectionRange(selectionStart, selectionEnd)
           }
 
           vSend.disabled = false;
 
-          if (this.isEditResponse != true) {
-            vOutput.value = output = '登录后点 ↑ 上方左侧最后图标按钮可查看用例列表，点上方右侧中间图标按钮可上传用例并且添加到列表中 ↑ \nOK，请点左上方 [发送请求] 按钮来测试。[点击这里查看视频教程](https://i.youku.com/i/UNTg1NzI1MjQ4MA==/videos?spm=a2hzp.8244740.0.0)' + code;
-
-            this.showDoc()
-          }
+          // if (this.isEditResponse != true) {
+          //   vOutput.value = output = '登录后点 ↑ 上方左侧最后图标按钮可查看用例列表，点上方右侧中间图标按钮可上传用例并且添加到列表中 ↑ \nOK，请点左上方 [发送请求] 按钮来测试。[点击这里查看视频教程](https://i.youku.com/i/UNTg1NzI1MjQ4MA==/videos?spm=a2hzp.8244740.0.0)' + code;
+          //
+          //   this.showDoc()
+          // }
 
           var docKey = this.isEditResponse ? 'TestRecord' : 'Document';
           var currentItem = (this.currentRemoteItem || {})[docKey] || {}
@@ -3758,9 +3771,15 @@
           return
         }
 
+        var url = this.getUrl()
+        var index = StringUtil.get(url).indexOf('://')
         if (StringUtil.isEmpty(this.host, true)) {
-          if (StringUtil.get(vUrl.value).startsWith('http://') != true && StringUtil.get(vUrl.value).startsWith('https://') != true) {
-            alert('URL 缺少 http:// 或 https:// 前缀，可能不完整或不合法，\n可能使用同域的 Host，很可能访问出错！')
+          // if (StringUtil.get(vUrl.value).startsWith('http://') != true && StringUtil.get(vUrl.value).startsWith('https://') != true) {
+          //   alert('URL 缺少 http:// 或 https:// 前缀，可能不完整或不合法，\n可能使用同域的 Host，很可能访问出错！')
+          // }
+          if (index <= 0) {
+            alert('URL 缺少 :// ，可能不完整或不合法，将自动补全')
+            url = this.database + (index >= 0 ? "" : "://") + url;
           }
         }
         else {
@@ -3786,16 +3805,33 @@
           return
         }
 
-        var req = this.getRequest(vInput.value, {})
+        var sql = StringUtil.trim(vInput.value)
+        var keys = Object.keys(header)
+        var keySize = keys == null ? 0 : keys.length
 
-        var url = this.getUrl()
+        if (keySize > 0) {
+          var code = '';
+          for (var i = 0; i < keySize; i++) {
+            var k = keys[i];
+            code += 'var ' + k + ' = "?";\n'
+            header[k] = eval(header[k])
+          }
+          code += 'var sql = `' + sql.replaceAll('`', '\\`') + '`;\nsql;'
+          sql = eval(code)
+        }
+
+        // var req = this.getRequest(vInput.value, {})
+        var req = {
+          uri: url,
+          sql: sql,
+          arg: Object.values(header)
+        }
 
         vOutput.value = "requesting... \nURL = " + url
         this.view = 'output';
 
-
         this.setBaseUrl()
-        this.request(isAdminOperation, this.type, url, req, isAdminOperation ? {} : header, callback)
+        this.request(isAdminOperation, this.type, this.server + "/execute", req, isAdminOperation ? {} : header, callback)
 
         this.locals = this.locals || []
         if (this.locals.length >= 1000) { //最多1000条，太多会很卡

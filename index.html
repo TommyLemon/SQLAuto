@@ -134,7 +134,7 @@
     <div class="side-left">
         <div v-show="! isTestCaseShow" class="left-bar" >
             <button class="transfer" id="vTransfer" @click="transfer()">' / "</button>
-            <button v-show="types != null && types.length > 1" class="transfer" id="vType" :disabled="isEditResponse" @click="changeType()">{{ getTypeName(type) }}</button>
+            <button v-show="false" class="transfer" id="vType" :disabled="isEditResponse" @click="changeType()">{{ getTypeName(type) }}</button>
             <div style="height: 100%;display: flex;flex-grow: 1">
                 <input class="url" id="vUrlComment" :disabled="isEditResponse" type="text" style="width: 100%; position: absolute; z-index: -100; color: darkseagreen;background: #0000;"  />
                 <input class="url" id="vUrl" :disabled="isEditResponse" type="text" @copy="doOnCopy" @paste="doOnPaste" @keyup="doOnKeyUp(event)" placeholder="请输入请求的接口地址" style="z-index: 0; background: #0000;" />
@@ -195,96 +195,33 @@
                     </textarea>
                     <textarea v-show="! isEditResponse" id="vWarning" style="width: 100%; height: 100%; position: absolute; z-index: 0; color: orangered; background-color: #0000;" wrap="off" disabled>
 					</textarea>
-                    <textarea id="vInput" @copy="doOnCopy" @paste="doOnPaste" @keyup="onChange(true)" style="width: 100%;height: 100%; position: absolute; z-index: 100; background: #0000;" wrap="off" placeholder="{  // 根对象，可在内部加 format,tag,version,@role,@database,@schema,@datasource,@explain,@cache 等全局关键词键值对
-  '[]': {  // 数组，可在内部加 count,page,query,join 等关键词键值对
-    'count': 5,  // 每页数量
-    'page': 0,  // 分页页码
-    'join': '</User/id@',  // 多表连接：LEFT JOIN User，同一层级必须有 'User':{ 'id@':'/../..' }
-    'Moment': {  // 动态
-      '@order': 'date+',  // 排序方式：+升序，-降序
-      '@column': 'id,userId;date_format(date,%Y-%m-%d %H:%m)',  // 返回字段，可传 字段(:别名)、SQL 函数(:别名，用分号 ; 隔开)、表达式，以及部分 SQL 关键词
-      '@explain': true,  // 性能分析：true-开启 false-关闭，返回执行的 SQL 及查询计划
-      'content~': 'o',  // 正则匹配 < content: String(300)? 内容
-      'userId!': 82001,  // 都不符合 < userId: Int(15), 用户id
-      '@combine': 'userId!,content~'  // 条件组合，| 可省略。合并同类，外层按照 & | ! 顺序，内层按传参顺序组合成 (key0 & key1 & key6 & 其它key) & (key2 | key3 | key7) & !(key4 | key5)
-    },
-    'User': {  // 用户公开信息表。  对安全要求高，不想泄漏真实名称。对外名称为 User
-      'id@': '/Moment/userId',  // 引用赋值，从对象父级开始的相对(缺省)路径 < id: Int(15), 唯一标识
-      '@column': 'id,name,head'  // 返回字段，可传 字段(:别名)、SQL 函数(:别名，用分号 ; 隔开)、表达式，以及部分 SQL 关键词
-    },
-    '[]': {  // 数组，可在内部加 count,page,query,join 等关键词键值对
-      'count': 6,  // 每页数量
-      'join': '@/User/id@',  // 多表连接：APP JOIN User，同一层级必须有 'User':{ 'id@':'/../..' }
-      'Comment': {  // 评论
-        '@order': 'date-',  // 排序方式：+升序，-降序
-        'momentId@': '[]/Moment/id'  // 引用赋值，从最外层开始的绝对(完整)路径 < momentId: Int(15), 动态id
-      },
-      'User': {  // 用户公开信息表。  对安全要求高，不想泄漏真实名称。对外名称为 User
-        'id@': '/Comment/userId',  // 引用赋值，从对象父级开始的相对(缺省)路径 < id: Int(15), 唯一标识
-        '@column': 'DISTINCT id,name;concat(%,name,%):concat'  // 返回字段，可传 字段(:别名)、SQL 函数(:别名，用分号 ; 隔开)、表达式，以及部分 SQL 关键词
-      }
-    }
-  }
-}
+                    <textarea id="vInput" @copy="doOnCopy" @paste="doOnPaste" @keyup="onChange(true)" style="width: 100%;height: 100%; position: absolute; z-index: 100; background: #0000;" wrap="off" >SELECT  `Comment`.`userId`, `User`.`id`, COUNT(1)
+FROM
+  `sys`.`Comment` AS `Comment`
+INNER JOIN
+  `sys`.`apijson_user` AS `User`
+  ON `User`.`id` = `Comment`.`userId`
+    AND (((`User`.`name` LIKE ${searchKey} )
+    OR (`User`.`tag` REGEXP ${searchKey} )))
+GROUP BY `User`.`id`
+HAVING ((`User`.`id`) % 7 != 0)
+ORDER BY `User`.`id` ASC
+LIMIT ${limit}</textarea>
+<!--                  <div id="editor" class="editor language-js hljs javascript" data-gramm="false" contenteditable="plaintext-only" spellcheck="false" style="width: 100%;height: 100%; z-index: 2000; background: none; outline: none; overflow-wrap: break-word; overflow-y: auto; white-space: pre-wrap;">SELECT-->
+<!--  `Comment`.`userId`, `User`.`id`, COUNT(1)-->
+<!--FROM-->
+<!--  `sys`.`Comment` AS `Comment`-->
+<!--INNER JOIN-->
+<!--  `sys`.`apijson_user` AS `User`-->
+<!--  ON `User`.`id` = `Comment`.`userId`-->
+<!--    AND (((`User`.`name` LIKE ${searchKey} )-->
+<!--    OR (`User`.`tag` REGEXP ${searchKey} )))-->
+<!--GROUP BY `User`.`id`-->
+<!--HAVING ((`User`.`id`) % 7 != 0)-->
+<!--ORDER BY `User`.`id` ASC-->
+<!--LIMIT ${limit}-->
+<!--                  </div>-->
 
-/*
-JSON 右侧可以写行注释，两个空格加两个斜杆 ' //' 开头；
-JSON 下方可以写段注释，'/*' 开头 '*/' 结尾，都在每行最前，
-段注释可以是普通文本或 Markdown 格式文本，一般用于枚举值等额外说明。
-
-### 例如一个表格
-开发流程 | 传统方式 | APIJSON
-   ---  |   ---   |  ---
-实现接口 | 写代码 + 写文档 | 都不用写
-兼容旧版 | v2, v3.. 接口  | 都不用写
-
-### 例如一段代码
-```js
-// 前端解析并打印 Response JSON
-var list = data['[]'] || []
-for (var i = 0; i < list.length; i ++) {
-   console.log('[]/' + i + '=' + JSON.stringify(list[i]))
-}
-```
-
-### 例如一张图片
-![](http://apijson.cn/images/logo-big.png)
-
-## 快捷键
-Ctrl + I 或 Command + I 格式化 JSON，清除所有注释和无效空格、换行等；
-Ctrl + / 或 Command + / 对选中行 新增行注释 或 取消行注释；
-
-#### 右上角设置项 > 预览请求输入框，显示对应的预览效果
-*/
-
-
-
-" >
-{
-    "User": {
-        "id": 82001
-    },  // 以上查一个对象，以下查一个数组，Comment.userId = User.id
-    "[]": {
-         Comment : {
-            'userId@': "User/id"
-        }
-    }
-}
-
-/*
-以上 JSON 文本支持 JSON5 格式。清空文本内容可查看规则。
-注释可省略。行注释前必须有两个空格；段注释必须在 JSON 下方。
-
-## 快捷键
-Ctrl + I 或 Command + I 格式化输入框，清除所有注释和无效空格、换行等；
-Ctrl + / 或 Command + / 对选中行 新增行注释 或 取消行注释；
-
-#### 右上角设置项 > 预览请求输入框，显示对应的预览效果
-*/
-
-
-
-                    </textarea>
                 </div>
                 <div id="vRequestMarkdown" v-show="isPreviewEnabled" style="width: 100%;height: 100%;position: relative;"></div>
 

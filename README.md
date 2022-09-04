@@ -10,7 +10,7 @@
   <a href="http://apijson.cn/sql">在线体验</a>
 </p>
 
-<img width="1279" alt="image" src="https://user-images.githubusercontent.com/5738175/188319828-23231f20-6696-4864-afbd-01c773324f01.png">
+<img width="1278" alt="image" src="https://user-images.githubusercontent.com/5738175/188322073-b7bb6e7d-a0ae-4e3d-8439-4fe4746135b8.png">
 
 ### 部署方法
 

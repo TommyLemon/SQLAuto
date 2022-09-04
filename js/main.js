@@ -3805,50 +3805,31 @@
           return
         }
 
-        var sql = StringUtil.trim(vInput.value)
-        var keys = Object.keys(header)
-        var keySize = keys == null ? 0 : keys.length
+        this.parseRandom(vInput.value, vHeader.value, -1, true, false, false, function (randomName, constConfig, constJson) {
+          vOutput.value = "requesting... \nURL = " + url
+          App.view = 'output';
+          var req = constJson;
 
-        if (keySize > 0) {
-          var code = '';
-          for (var i = 0; i < keySize; i++) {
-            var k = keys[i];
-            code += 'var ' + k + ' = "?";\n'
-            header[k] = eval(header[k])
+          App.setBaseUrl()
+          App.request(isAdminOperation, App.type, App.server + "/execute", req, isAdminOperation ? {} : header, callback)
+
+          App.locals = App.locals || []
+          if (App.locals.length >= 1000) { //最多1000条，太多会很卡
+            App.locals.splice(999, App.locals.length - 999)
           }
-          code += 'var sql = `' + sql.replaceAll('`', '\\`') + '`;\nsql;'
-          sql = eval(code)
-        }
-
-        // var req = this.getRequest(vInput.value, {})
-        var req = {
-          uri: url,
-          sql: sql,
-          arg: Object.values(header)
-        }
-
-        vOutput.value = "requesting... \nURL = " + url
-        this.view = 'output';
-
-        this.setBaseUrl()
-        this.request(isAdminOperation, this.type, this.server + "/execute", req, isAdminOperation ? {} : header, callback)
-
-        this.locals = this.locals || []
-        if (this.locals.length >= 1000) { //最多1000条，太多会很卡
-          this.locals.splice(999, this.locals.length - 999)
-        }
-        var method = this.getMethod()
-        this.locals.unshift({
-          'Document': {
-            'userId': this.User.id,
-            'name': this.formatDateTime() + ' ' + (this.urlComment || StringUtil.trim(req.tag)),
-            'type': this.type,
-            'url': '/' + method,
-            'request': JSON.stringify(req, null, '    '),
-            'header': vHeader.value
-          }
+          var method = App.getMethod()
+          App.locals.unshift({
+            'Document': {
+              'userId': App.User.id,
+              'name': App.formatDateTime() + ' ' + (App.urlComment || StringUtil.trim(req.tag)),
+              'type': App.type,
+              'url': '/' + method,
+              'request': JSON.stringify(req, null, '    '),
+              'header': vHeader.value
+            }
+          })
+          App.saveCache('', 'locals', App.locals)
         })
-        this.saveCache('', 'locals', this.locals)
       },
 
       //请求
@@ -5108,7 +5089,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
             this.resetCount(this.currentRandomItem)
           }
 
-          var json = this.getRequest(vInput.value, {})
+          var json = vInput.value; // this.getRequest(vInput.value, {})
           var url = this.getUrl()
           var header = this.getHeader(vHeader.value)
 
@@ -5148,7 +5129,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
        * @param show
        * @param callback
        */
-      testRandomSingle: function (show, testList, testSubList, item, type, url, json, header, callback) {
+      testRandomSingle: function (show, testList, testSubList, item, type, url, sql, header, callback) {
         item = item || {}
         var random = item.Random = item.Random || {}
         var subs = item['[]'] || []
@@ -5165,8 +5146,8 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
           const which = i;
           var rawConfig = testSubList && i < existCount ? ((subs[i] || {}).Random || {}).config : random.config
           this.parseRandom(
-            JSON.parse(JSON.stringify(json)), rawConfig, random.id
-            , ! testSubList, testSubList && i >= existCount, testSubList && i >= existCount
+            sql, rawConfig, random.id
+            , ! testSubList, count == 1 || (testSubList && i >= existCount), testSubList && i >= existCount
             , function (randomName, constConfig, constJson) {
 
               respCount ++;
@@ -5211,7 +5192,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
                 };
 
                 if (show == true) {
-                  vInput.value = JSON.stringify(constJson, null, '    ');
+                  vHeader.value = constConfig;
                   App.send(false, cb);
                 }
                 else {
@@ -5294,14 +5275,21 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
        * @param show
        * @param callback
        */
-      parseRandom: function (json, config, randomId, generateJSON, generateConfig, generateName, callback) {
+      parseRandom: function (sql, config, randomId, generateJSON, generateConfig, generateName, callback) {
         var lines = config == null ? null : config.trim().split('\n')
         if (lines == null || lines.length <= 0) {
           // return null;
           callback(null, null, null);
           return
         }
-        json = json || {};
+
+        sql = StringUtil.trim(sql)
+
+        var code = ''
+        var arg = []
+        // TODO 新增一个默认参数面板，自动将 SQL 里的变量生成 hint 到
+
+        // var req = this.getRequest(vInput.value, {})
 
         baseUrl = this.getBaseUrl();
 
@@ -5312,7 +5300,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
         var randomNameKeys = []
         var constConfigLines = [] //TODO 改为 [{ "rawPath": "User/id", "replacePath": "User/id@", "replaceValue": "RANDOM_INT(1, 10)", "isExpression": true }] ?
 
-        // alert('< json = ' + JSON.stringify(json, null, '    '))
+        // alert('< sql = ' + JSON.stringify(json, null, '    '))
 
         for (let i = 0; i < reqCount; i ++) {
           const which = i;
@@ -5325,6 +5313,10 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
           if (line.length <= 0) {
             respCount ++;
             if (i >= lines.length - 1 && respCount >= reqCount) {
+              var json = {
+                sql: sql,
+                arg: arg
+              }
               callback(randomNameKeys.join(', '), constConfigLines.join('\n'), json);
             }
             continue;
@@ -5336,7 +5328,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
           const bi = -1;  //没必要支持，用 before: undefined, after: .. 同样支持替换，反而这样导致不兼容包含空格的 key   p_k.indexOf(' ');
           const path = bi < 0 ? p_k : p_k.substring(0, bi); // User/id
 
-          const pathKeys = path.split('/')
+          const pathKeys = [path]; // path.split('/')
           if (pathKeys == null || pathKeys.length <= 0) {
             throw new Error('参数注入 第 ' + (i + 1) + ' 行格式错误！\n字符 ' + path + ' 不符合 JSON 路径的格式 key0/key1/../targetKey !' +
               '\n每个随机变量配置都必须按照\n  key0/key1/../targetKey replaceKey: value  // 注释\n的格式！' +
@@ -5399,32 +5391,9 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
               if (generateJSON) {
                 //先按照单行简单实现
                 //替换 JSON 里的键值对 key: value
-                var parent = json;
-                var current = null;
-                for (var j = 0; j < pathKeys.length - 1; j ++) {
-                  current = parent[pathKeys[j]]
-                  if (current == null) {
-                    current = parent[pathKeys[j]] = {}
-                  }
-                  if (parent instanceof Object == false) {
-                    throw new Error('参数注入 第 ' + (i + 1) + ' 行格式错误！路径 ' + path + ' 中' +
-                      ' pathKeys[' + j + '] = ' + pathKeys[j] + ' 在实际请求 JSON 内对应的值不是对象 {} 或 数组 [] !');
-                  }
-                  parent = current;
-                }
-
-                if (current == null) {
-                  current = json;
-                }
-                // alert('< current = ' + JSON.stringify(current, null, '    '))
-
-                if (key != lastKeyInPath || current.hasOwnProperty(key) == false) {
-                  delete current[lastKeyInPath];
-                }
-
-                current[key] = val;
+                code += 'var ' + key + ' = "?";\n';
+                arg.push(val);
               }
-
             }
             catch (e) {
               throw new Error('第 ' + (which + 1) + ' 行随机配置 key: value 后的 value 不合法！ \nerr: ' + e.message)
@@ -5432,6 +5401,13 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
 
             respCount ++;
             if (respCount >= reqCount) {
+              code += 'var sql = `' + sql.replaceAll('`', '\\`') + '`;\nsql;'
+              sql = eval(code)
+              var json = {
+                sql: sql,
+                arg: arg  // Object.values(header)
+              }
+
               callback(randomNameKeys.join(', '), constConfigLines.join('\n'), json);
             }
           };

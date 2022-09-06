@@ -5196,7 +5196,8 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
                   App.send(false, cb);
                 }
                 else {
-                  App.request(false, type, url, constJson, header, cb);
+                  // header 目前不是 JSONObject 不适合传参 App.request(false, type, url, constJson, header, cb);
+                  App.request(false, type, App.server + '/execute', constJson, {}, cb);
                 }
               }
 
@@ -5388,12 +5389,12 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
                 randomNameKeys[which] = valStr;
               }
 
-              if (generateJSON) {
+              // if (generateJSON) {
                 //先按照单行简单实现
                 //替换 JSON 里的键值对 key: value
                 code += 'var ' + key + ' = "?";\n';
                 arg.push(val);
-              }
+              // }
             }
             catch (e) {
               throw new Error('第 ' + (which + 1) + ' 行随机配置 key: value 后的 value 不合法！ \nerr: ' + e.message)
@@ -5401,8 +5402,8 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
 
             respCount ++;
             if (respCount >= reqCount) {
-              code += 'var sql = `' + sql.replaceAll('`', '\\`') + '`;\nsql;'
-              sql = eval(code)
+              code += 'return `' + sql.replaceAll('`', '\\`') + '`;'
+              sql = eval('(function() {\n' + code + '\n})()')
               var json = {
                 sql: sql,
                 arg: arg  // Object.values(header)

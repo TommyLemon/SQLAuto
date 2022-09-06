@@ -139,7 +139,7 @@
                 <input class="url" id="vUrlComment" :disabled="isEditResponse" type="text" style="width: 100%; position: absolute; z-index: -100; color: darkseagreen;background: #0000;"  />
                 <input class="url" id="vUrl" :disabled="isEditResponse" type="text" @copy="doOnCopy" @paste="doOnPaste" @keyup="doOnKeyUp(event)" placeholder="请输入请求的接口地址" style="z-index: 0; background: #0000;" />
             </div>
-            <button class="send" id="vSend" @click="onClickSend()">{{ isEditResponse ? '模拟返回' : '发送请求' }}</button>
+            <button class="send" id="vSend" @click="onClickSend()">{{ isEditResponse ? '模拟返回' : '远程执行' }}</button>
         </div>
         <div v-show="isTestCaseShow" class="left-bar">
             <!--<svg class="icon" style="margin-left: 10px">-->

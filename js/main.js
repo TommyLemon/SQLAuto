@@ -5757,7 +5757,11 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
         else {
           var standardKey = this.isMLEnabled != true ? 'response' : 'standard'
           var standard = StringUtil.isEmpty(tr[standardKey], true) ? null : JSON.parse(tr[standardKey])
-          tr.compare = JSONResponse.compareResponse(standard, this.removeDebugInfo(response) || {}, '', this.isMLEnabled, null, null, ignoreTrend) || {}
+
+          var rsp = JSON.parse(JSON.stringify(this.removeDebugInfo(response) || {}))
+          delete rsp.arg  // FIXME  rsp = JSONResponse.array2object(rsp, 'arg', ['arg'], true)
+
+          tr.compare = JSONResponse.compareResponse(standard, rsp, '', this.isMLEnabled, null, [], ignoreTrend) || {}
           tr.compare.duration = it.durationHint
         }
 
@@ -5898,6 +5902,8 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
        */
       removeDebugInfo: function (obj) {
         if (obj != null) {
+          delete obj["arg"]  // FIXME
+
           delete obj["trace"]
           delete obj["sql:generate|cache|execute|maxExecute"]
           delete obj["depth:count|max"]
@@ -6113,6 +6119,9 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
 
               delete currentResponse.code; //code必须一致
               delete currentResponse.throw; //throw必须一致
+
+              var rsp = JSON.parse(JSON.stringify(currentResponse || {}))
+              delete rsp.arg  // FIXME rsp = JSONResponse.array2object(rsp, 'arg', ['arg'], true)
 
               var find = false;
               if (isCodeChange && hasCode) {  // 走异常分支

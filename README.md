@@ -2,7 +2,7 @@
   SQLAuto
 </h1>
  
-<p align="center">☔ 静态检查 SQL 语法、自动化测试 SQL 语句的数据库工具</p>
+<p align="center">☔ 机器学习零代码测试 SQL、任意增删改查、任意 SQL 模板变量、一键批量生成</p>
 
 <p align="center" >
   <a href="https://github.com/TommyLemon/SQLAuto#%E9%83%A8%E7%BD%B2%E6%96%B9%E6%B3%95">使用文档</a>

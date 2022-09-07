@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>SQLAuto-机器学习零代码测试、生成代码与静态检查、生成文档与光标悬浮注释</title>
+    <title>SQLAuto-机器学习零代码测试 SQL、任意增删改查、任意 SQL 模板变量、一键批量生成</title>
     <meta charset="utf-8" />
-    <meta name="keywords" content="apijson,api,json,auto,apiauto,自动生成接口文档,自动化接口回归测试,机器学习接口回归测试,回归测试,机器学习,接口测试,API测试,自动化,API自动化,接口自动化,fastjson,json在线解析,json格式化验证"/>
-    <meta name="description" content="SQLAuto-敏捷开发最强大易用的 HTTP 接口工具，机器学习零代码测试、生成代码与静态检查、生成文档与光标悬浮注释"/>
+    <meta name="keywords" content="apijson,sql,auto,sqlauto,自动生成接口文档,自动化接口回归测试,机器学习接口回归测试,回归测试,机器学习,数据库测试,SQL测试,自动化,SQL 自动化,数据库自动化"/>
+    <meta name="description" content="SQLAuto-机器学习零代码测试 SQL、任意增删改查、任意 SQL 模板变量、一键批量生成"/>
 
     <!-- 登录 <<<<<<<<<<<<<<<<<<<< -->
     <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css">
@@ -118,7 +118,7 @@
                   <a style="border-bottom: #DDD 1px solid;width: 100%" href="javascript:void(0)" @click="showConfig(true, 1)">数据库名/模式 Schema: {{ schema || '例如 sys' }}</a>
                   <a v-show="User.id == null || User.id <= 0" style="border-bottom: #DDD 1px solid;width: 100%" href="javascript:void(0)" @click="showConfig(true, 7)">使用的请求类型: {{ types == null || types.length <= 0 ? '点击设置' : (types instanceof Array ? types.join() : types) }}</a>
                   <a v-show="User.id == null || User.id <= 0" style="border-bottom: #DDD 1px solid;width: 100%" href="javascript:void(0)" @click="showConfig(true, 6)">托管服务器地址 URL: {{ server || '点击设置' }}</a>
-                  <a v-show="User.id != null && User.id > 0" style="border-bottom: #DDD 1px solid;width: 100%" href="javascript:void(0)" @click="showConfig(true, 8)">导入第三方文档(平台名 URL): <br/>{{ thirdParty || '点击设置' }}</a>
+                  <a v-show="false && User.id != null && User.id > 0" style="border-bottom: #DDD 1px solid;width: 100%" href="javascript:void(0)" @click="showConfig(true, 8)">导入第三方文档(平台名 URL): <br/>{{ thirdParty || '点击设置' }}</a>
                 </ul>
       </span>
 
@@ -173,7 +173,7 @@
             <ul v-show="isTestCaseShow" class="historys" style="width: 100%;height: 100%;overflow: hidden;overflow-y: scroll;padding-bottom: 50px">
                 <li v-for="(item, index) in testCases" >
                     <div style="display: inline-table">
-                        <button v-show="types != null && types.length > 1" style="width: 48px;margin-right: 6px;padding: 0px;position: relative" id="vDocType" @click="restoreRemoteAndTest(index, item)">{{ getTypeName(item.Document.type) }}</button>
+                        <button v-show="false && types != null && types.length > 1" style="width: 48px;margin-right: 6px;padding: 0px;position: relative" id="vDocType" @click="restoreRemoteAndTest(index, item)">{{ getTypeName(item.Document.type) }}</button>
                         <a class="hint--rounded hint--no-animate" ref="testCaseTexts" @mouseover="setRequestHint(index, item)" href="javascript:void(0)" @click="restoreRemote(index, item)" :style="{ color: index == currentDocIndex ? 'black' : 'gray' }"> {{(item.Document.version > 0 ? 'V' + item.Document.version : 'V*') + ' ' + item.Document.name  + '    ' + item.Document.url}}</a>
                         <div :style="{ background: item.compareColor }" v-show="item.compareType != null" style="position: absolute;top: 8px;right: 36px;display: inline-block;">
                             <button class="hint--left" ref="testResultButtons" @mouseover="setTestHint(index, item)" v-show="item.compareType != null" @click="handleTest(false, index, item)" style="position: relative;">{{ item.compareMessage + (item.showType == 'before' ? '-前' : '-后') }}</button>
@@ -196,36 +196,34 @@
                     <textarea v-show="! isEditResponse" id="vWarning" style="width: 100%; height: 100%; position: absolute; z-index: 0; color: orangered; background-color: #0000;" wrap="off" disabled>
 					</textarea>
                     <textarea id="vInput" @copy="doOnCopy" @paste="doOnPaste" @keyup="onChange(true)" style="width: 100%;height: 100%; position: absolute; z-index: 100; background: #0000;" wrap="off" >SELECT  `Comment`.`userId`, `User`.`id`, COUNT(1)
-FROM
-  `sys`.`Comment` AS `Comment`
-INNER JOIN
-  `sys`.`apijson_user` AS `User`
+FROM `sys`.`Comment` AS `Comment`
+INNER JOIN `sys`.`apijson_user` AS `User`
   ON `User`.`id` = `Comment`.`userId`
-    AND (((`User`.`name` LIKE ${searchKey} )
-    OR (`User`.`tag` REGEXP ${searchKey} )))
-GROUP BY `User`.`id`
-HAVING ((`User`.`id`) % 7 != 0)
-ORDER BY `User`.`id` ASC
-LIMIT ${limit}</textarea>
-<!--                  <div id="editor" class="editor language-js hljs javascript" data-gramm="false" contenteditable="plaintext-only" spellcheck="false" style="width: 100%;height: 100%; z-index: 2000; background: none; outline: none; overflow-wrap: break-word; overflow-y: auto; white-space: pre-wrap;">SELECT-->
-<!--  `Comment`.`userId`, `User`.`id`, COUNT(1)-->
-<!--FROM-->
-<!--  `sys`.`Comment` AS `Comment`-->
-<!--INNER JOIN-->
-<!--  `sys`.`apijson_user` AS `User`-->
-<!--  ON `User`.`id` = `Comment`.`userId`-->
-<!--    AND (((`User`.`name` LIKE ${searchKey} )-->
-<!--    OR (`User`.`tag` REGEXP ${searchKey} )))-->
-<!--GROUP BY `User`.`id`-->
-<!--HAVING ((`User`.`id`) % 7 != 0)-->
-<!--ORDER BY `User`.`id` ASC-->
-<!--LIMIT ${limit}-->
-<!--                  </div>-->
-
+    AND `User`.`name` LIKE ${searchKey}
+GROUP BY `User`.`id` HAVING ((`User`.`id`) % ${userId} != 0)
+ORDER BY `User`.`id` ASC LIMIT ${limit} OFFSET ${offset}</textarea>
                 </div>
                 <div id="vRequestMarkdown" v-show="isPreviewEnabled" style="width: 100%;height: 100%;position: relative;"></div>
 
                 <div style="width: 100%; height: auto; position: absolute;bottom: 0px; z-index: 100; background: white;" >
+                  <div v-show="isHeaderShow" style="width: 100%; height: 150px; position: relative;" >
+                    <div class="left-bar" style="border-top: #DDD 1px solid; position: relative">
+                      <a style="padding-left: 10px;padding-right: 2px;font-size: medium;color: black" >{{ (isEditResponse ? '响应头 Response Header' : '请求头 Request Header' ) }}<a style="display: flex;flex-grow: 1;padding-right: 10px;padding-top: 2px"> (每行都按 key: value 格式)</a></a>
+                      <a class="hint--top @cli-tool" data-hint="隐藏" style="float: right;padding: 8px;height: 100%"  href="javascript:void(0)" @click="showConfig(false, 4)">
+                        <svg class="icon close-icon"  >
+                          <use xlink:href="svg/icon.svg#close"></use>
+                        </svg>
+                      </a>
+                    </div>
+                    <textarea id="vHeader" @copy="doOnCopy" @paste="doOnPaste" @keyup="onChange(true)" style="width: 100%;height: 100%;" wrap="off" placeholder="Authorization: Basic YWRtaW46YWRtaW4=  // 示例，支持单行注释
+My-Header: 'Secret' + Math.random()  // 示例，代码执行结果作为实际值，值为 fun(arg0, arg1..) 等包含函数名与括号的格式
+  // ## 快捷键
+  // Ctrl + I 或 Command + I 格式化文本，清除所有注释和无效空格、换行等；
+  // Ctrl + / 或 Command + / 对选中行 新增行注释 或 取消行注释；">searchKey: '%a%'
+userId: 82001
+limit: 3
+offset: 0</textarea>
+                  </div>
 
                     <div v-show="isRandomShow" style="width: 100%; height: 330px; position: relative;" >
                         <div class="left-bar" style="border-top: #DDD 1px solid; position: relative">
@@ -343,11 +341,11 @@ format: ORDER_IN(true, false, null, undefined)  // 从选项中顺序取值
 User/id: RANDOM_DB()  // 从数据库随机取值，等价于 User/id: RANDOM_DB(null, null, 'User', 'id')
 []/page: Math.round(100*Math.random())  // 通过 JavaScript 代码来自定义 [] 内的 page
 ">
-User/id: RANDOM_INT(82001, 82020)  // 随机整数
-[]/count: RANDOM_IN(5, 10, 's', false, [], {})  // 随机取值
-[]/page: Math.round(5*Math.random())  // 通过代码来自定义
-@explain: ORDER_IN(true, false)  // 顺序取值
-  // 从数据库随机取值  []/Comment/toId: RANDOM_DB()
+searchKey: '%a%'  // 固定常量值
+userId: RANDOM_IN(82001, 82002, 82003)  // 随机选项取值
+limit: ORDER_IN(1, 3, 5, 10)  // 顺序选项取值
+offset: RANDOM_INT(0, 5)  // 随机范围取值
+  // 从数据库随机取值  userId: RANDOM_DB('Comment', 'userId')
 
   // 注释可省略，但如果未省略则前面两个空格必须；清空文本内容可查看规则。
 
@@ -356,24 +354,6 @@ User/id: RANDOM_INT(82001, 82020)  // 随机整数
   // Ctrl + / 或 Command + / 对选中行 新增行注释 或 取消行注释；
                         </textarea>
                     </div>
-
-
-                    <div v-show="isHeaderShow" style="width: 100%; height: 150px; position: relative;" >
-                        <div class="left-bar" style="border-top: #DDD 1px solid; position: relative">
-                            <a style="padding-left: 10px;padding-right: 2px;font-size: medium;color: black" >{{ (isEditResponse ? '响应头 Response Header' : '请求头 Request Header' ) }}<a style="display: flex;flex-grow: 1;padding-right: 10px;padding-top: 2px"> (每行都按 key: value 格式)</a></a>
-                            <a class="hint--top @cli-tool" data-hint="隐藏" style="float: right;padding: 8px;height: 100%"  href="javascript:void(0)" @click="showConfig(false, 4)">
-                                <svg class="icon close-icon"  >
-                                    <use xlink:href="svg/icon.svg#close"></use>
-                                </svg>
-                            </a>
-                        </div>
-                        <textarea id="vHeader" @copy="doOnCopy" @paste="doOnPaste" @keyup="onChange(true)" style="width: 100%;height: 100%;" wrap="off" placeholder="Authorization: Basic YWRtaW46YWRtaW4=  // 示例，支持单行注释
-My-Header: 'Secret' + Math.random()  // 示例，代码执行结果作为实际值，值为 fun(arg0, arg1..) 等包含函数名与括号的格式
-  // ## 快捷键
-  // Ctrl + I 或 Command + I 格式化文本，清除所有注释和无效空格、换行等；
-  // Ctrl + / 或 Command + / 对选中行 新增行注释 或 取消行注释；"></textarea>
-                    </div>
-
                 </div>
             </div>
         </div>
@@ -778,7 +758,7 @@ My-Header: 'Secret' + Math.random()  // 示例，代码执行结果作为实际�
   var vVerify = document.getElementById("vVerify");
   var vRemember = document.getElementById("vRemember");
 
-  vUrl.value = new String(URL_BASE + '/get'); //main.js里访问不到，可能是script引用顺序问题
+  vUrl.value = new String('jdbc:mysql://localhost:3306/sys'); //main.js里访问不到，可能是script引用顺序问题
 
   var vRequestMarkdown = document.getElementById('vRequestMarkdown');
   var vMarkdown = document.getElementById('vMarkdown');

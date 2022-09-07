@@ -576,7 +576,7 @@
       error: {},
       requestVersion: 3,
       requestCount: 1,
-      urlComment: '一对多关联查询 Comment.userId = User.id',
+      urlComment: '带变量 SQL 模板及参数注入 示例',
       historys: [],
       history: {name: '请求0'},
       remotes: [],
@@ -625,7 +625,7 @@
       isExportCheckShow: false,
       isExportRandom: false,
       isTestCaseShow: false,
-      isHeaderShow: false,
+      isHeaderShow: true,
       isRandomShow: true,  // 默认展示
       isRandomListShow: false,
       isRandomSubListShow: false,
@@ -966,17 +966,17 @@
                 + '\n错误文本: ' + item)
             }
 
-            var val = item2.substring(index + 1, item2.length)
+            var val = item2.substring(index + 1, item2.length).trim();
 
-            var ind = val.indexOf('(')  //一定要有函数是为了避免里面是一个简短单词和 SQLAuto 代码中变量冲突
-            if (ind > 0 && val.indexOf(')') > ind) {  //不从 0 开始是为了保证是函数，且不是 (1) 这种单纯限制作用域的括号
+            // var ind = val.indexOf('(')  //一定要有函数是为了避免里面是一个简短单词和 SQLAuto 代码中变量冲突
+            // if (ind > 0 && val.indexOf(')') > ind) {  //不从 0 开始是为了保证是函数，且不是 (1) 这种单纯限制作用域的括号
               try {
                 val = eval(val)
               }
               catch (e) {
                 this.log("getHeader  if (hs != null && hs.length > 0) { ... if (ind > 0 && val.indexOf(')') > ind) { ... try { val = eval(val) } catch (e) = " + e.message)
               }
-            }
+            // }
 
             header[StringUtil.trim(item2.substring(0, index))] = val
           }
@@ -1356,7 +1356,7 @@
           this.isEditResponse = show
           // this.saveCache('', 'isEditResponse', show)
 
-          vInput.value = (this.currentRemoteItem.Document || {}).request || ''
+          vInput.value = (this.currentRemoteItem.Document || {}).sqlauto || ''
           vHeader.value = (this.currentRemoteItem.Document || {}).header || ''
 
           this.isTestCaseShow = false
@@ -1450,7 +1450,7 @@
           name: this.history.name,
           type: this.type,
           url: '/' + this.getMethod(),
-          request: inputted,
+          sqlauto: inputted,
           response: this.jsoncon,
           header: vHeader.value,
           random: vRandom.value
@@ -1535,7 +1535,7 @@
           this.showUrl(false, branch)
 
           this.showTestCase(false, this.isLocalShow)
-          vInput.value = StringUtil.get(item.request)
+          vInput.value = StringUtil.get(item.sqlauto)
           vHeader.value = StringUtil.get(item.header)
           vRandom.value = StringUtil.get(item.random)
           this.onChange(false)
@@ -1766,8 +1766,8 @@
             var code_ = inputObj.code
             inputObj.code = null  // delete inputObj.code
 
-            commentObj = JSONResponse.updateStandard(commentStddObj, inputObj);
-            CodeUtil.parseComment(after, docObj == null ? null : docObj['[]'], m, this.database, this.language, isEditResponse != true, commentObj, true);
+            // commentObj = JSONResponse.updateStandard(commentStddObj, inputObj);
+            // CodeUtil.parseComment(after, docObj == null ? null : docObj['[]'], m, this.database, this.language, isEditResponse != true, commentObj, true);
 
             inputObj.code = code_
           }
@@ -1842,7 +1842,7 @@
               config = newCfg;
             }
 
-            commentObj = JSONResponse.updateStandard({}, mapReq2);
+            // commentObj = JSONResponse.updateStandard({}, mapReq2);
           }
 
 
@@ -1903,8 +1903,8 @@
                 'name': extName,
                 'type': App.type,
                 'url': '/' + method, // 'url': isReleaseRESTful ? ('/' + methodInfo.method + '/' + methodInfo.tag) : ('/' + method),
-                'request': JSON.stringify(btnIndex <= 0 ? constJson : mapReq, null, '    '),
-                'apijson': btnIndex <= 0 ? undefined : JSON.stringify(constJson, null, '    '),
+                'request': '{}',
+                'sqlauto': constJson,
                 'standard': commentObj == null ? null : JSON.stringify(commentObj, null, '    '),
                 'header': vHeader.value,
                 'detail': App.getExtraComment() || ((App.currentRemoteItem || {}).Document || {}).detail,
@@ -1982,7 +1982,7 @@
 
                   const isGenerate = StringUtil.isEmpty(config, true);
                   if (isGenerate) {
-                    var req = isReleaseRESTful ? mapReq : App.getRequest(vInput.value, {})
+                    var req = isReleaseRESTful ? mapReq : App.getHeader(vHeader.value, {})
                     config = StringUtil.trim(App.newRandomConfig(null, '', req))
 
                     if (StringUtil.isEmpty(config, true)) {
@@ -2753,7 +2753,8 @@
             'type': type,
             'name': StringUtil.get(name),
             'url': url,
-            'request': req,
+            'request': '{}',
+            'sqlauto': req,
             'header': StringUtil.isEmpty(header, true) ? null : StringUtil.trim(header)
           },
           'TestRecord': {
@@ -2986,8 +2987,10 @@
                 'userId': this.User.id,
                 'name$': search,
                 'url$': search,
-                '@combine':  search == null ? null : 'name$,url$',
-                'type{}': types == null || types.length <= 0 ? null : types
+                'sqlauto$': search,
+                '@combine':  search == null ? null : 'name$,url$,sqlauto$',
+                // 'type{}': types == null || types.length <= 0 ? null : types,
+                'sqlauto{}': 'length(sqlauto)>2'
               },
               'TestRecord': {
                 'documentId@': '/Document/id',
@@ -3508,15 +3511,15 @@
               }
             }
 
-            //关键词let在IE和Safari上不兼容
-            if (this.isEditResponse != true) {
-              try {
-                code = this.getCode(after); //必须在before还是用 " 时使用，后面用会因为解析 ' 导致失败
-              } catch (e) {
-                code = '\n\n\n建议:\n使用其它浏览器，例如 谷歌Chrome、火狐FireFox 或者 微软Edge， 因为这样能自动生成请求代码.'
-                  + '\nError:\n' + e.message + '\n\n\n';
-              }
-            }
+            // //关键词let在IE和Safari上不兼容
+            // if (this.isEditResponse != true) {
+            //   try {
+            //     code = this.getCode(after); //必须在before还是用 " 时使用，后面用会因为解析 ' 导致失败
+            //   } catch (e) {
+            //     code = '\n\n\n建议:\n使用其它浏览器，例如 谷歌Chrome、火狐FireFox 或者 微软Edge， 因为这样能自动生成请求代码.'
+            //       + '\nError:\n' + e.message + '\n\n\n';
+            //   }
+            // }
 
             // var selectionStart = vInput.selectionStart
             // var selectionEnd = vInput.selectionEnd
@@ -3531,11 +3534,11 @@
 
           vSend.disabled = false;
 
-          // if (this.isEditResponse != true) {
-          //   vOutput.value = output = '登录后点 ↑ 上方左侧最后图标按钮可查看用例列表，点上方右侧中间图标按钮可上传用例并且添加到列表中 ↑ \nOK，请点左上方 [发送请求] 按钮来测试。[点击这里查看视频教程](https://i.youku.com/i/UNTg1NzI1MjQ4MA==/videos?spm=a2hzp.8244740.0.0)' + code;
-          //
-          //   this.showDoc()
-          // }
+          if (this.isEditResponse != true) {
+            vOutput.value = output = '登录后点 ↑ 上方左侧最后图标按钮可查看用例列表，点上方右侧中间图标按钮可上传用例并且添加到列表中 ↑ \nOK，请点左上方 [发送请求] 按钮来测试。[点击这里查看视频教程](https://i.youku.com/i/UNTg1NzI1MjQ4MA==/videos?spm=a2hzp.8244740.0.0)' + code;
+
+            this.showDoc()
+          }
 
           var docKey = this.isEditResponse ? 'TestRecord' : 'Document';
           var currentItem = (this.currentRemoteItem || {})[docKey] || {}
@@ -3559,8 +3562,8 @@
             }
 
             var m = this.getMethod();
-            var w = isSingle || this.isEditResponse ? '' : StringUtil.trim(CodeUtil.parseComment(after, docObj == null ? null : docObj['[]'], m, this.database, this.language, this.isEditResponse != true, standardObj, null, true, isAPIJSONRouter));
-            var c = isSingle ? '' : StringUtil.trim(CodeUtil.parseComment(after, docObj == null ? null : docObj['[]'], m, this.database, this.language, this.isEditResponse != true, standardObj, null, null, isAPIJSONRouter));
+            var w = isSingle || this.isEditResponse ? '' : '' // StringUtil.trim(CodeUtil.parseComment(after, docObj == null ? null : docObj['[]'], m, this.database, this.language, this.isEditResponse != true, standardObj, null, true, isAPIJSONRouter));
+            var c = isSingle ? '' : '' // StringUtil.trim(CodeUtil.parseComment(after, docObj == null ? null : docObj['[]'], m, this.database, this.language, this.isEditResponse != true, standardObj, null, null, isAPIJSONRouter));
 
 
             //TODO 统计行数，补全到一致 vInput.value.lineNumbers
@@ -3824,7 +3827,8 @@
               'name': App.formatDateTime() + ' ' + (App.urlComment || StringUtil.trim(req.tag)),
               'type': App.type,
               'url': '/' + method,
-              'request': JSON.stringify(req, null, '    '),
+              'request': '{}',
+              'sqlauto': req,
               'header': vHeader.value
             }
           })
@@ -4516,11 +4520,11 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
         vOutput.value += (
           '\n\n\n## 文档 \n\n 通用文档见 [APIJSON通用文档](https://github.com/Tencent/APIJSON/blob/master/Document.md#3.2) \n### 数据字典\n自动查数据库表和字段属性来生成 \n\n' + d
           + '<h3 align="center">关于</h3>'
-          + '<p align="center">SQLAuto-机器学习 HTTP 接口工具'
-          + '<br>机器学习零代码测试、生成代码与静态检查、生成文档与光标悬浮注释'
+          + '<p align="center">SQLAuto-智能零代码 SQL 数据库测试 工具'
+          + '<br>机器学习零代码测试 SQL、任意增删改查、任意 SQL 模板变量、一键批量生成'
           + '<br>由 <a href="https://github.com/TommyLemon/SQLAuto" target="_blank">SQLAuto(前端网页工具)</a>, <a href="https://github.com/Tencent/APIJSON" target="_blank">APIJSON(后端接口服务)</a> 等提供技术支持'
           + '<br>遵循 <a href="http://www.apache.org/licenses/LICENSE-2.0" target="_blank">Apache-2.0 开源协议</a>'
-          + '<br>Copyright &copy; 2016-' + new Date().getFullYear() + ' Tommy Lemon'
+          + '<br>Copyright &copy; 2022-' + new Date().getFullYear() + ' Tommy Lemon'
           + '<br><a href="https://beian.miit.gov.cn/" target="_blank"><span >粤ICP备18005508号-1</span></a>'
           + '</p><br><br>'
         );
@@ -4573,7 +4577,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
               'table_name$': search,
               'table_comment$': this.database == 'POSTGRESQL' ? null : search,
               '@combine': search == null || this.database == 'POSTGRESQL' ? null : 'table_name$,table_comment$',
-              'table_name{}@': 'sql',
+              'table_name{}@': 'request',
               '@order': 'table_name+', //MySQL 8 SELECT `table_name` 返回的仍然是大写的 TABLE_NAME，需要 AS 一下
               '@column': this.database == 'POSTGRESQL' ? 'table_name' : 'table_name:table_name,table_comment:table_comment'
             },
@@ -5680,32 +5684,35 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
             doneCount++
             continue
           }
-          if (document.url == '/login' || document.url == '/logout') { //login会导致登录用户改变为默认的但UI上还显示原来的，单独测试OWNER权限时能通过很困惑
-            this.log('startTest  document.url == "/login" || document.url == "/logout" >> continue')
-            doneCount++
-            continue
-          }
+          // if (document.url == '/login' || document.url == '/logout') { //login会导致登录用户改变为默认的但UI上还显示原来的，单独测试OWNER权限时能通过很困惑
+          //   this.log('startTest  document.url == "/login" || document.url == "/logout" >> continue')
+          //   doneCount++
+          //   continue
+          // }
           this.log('test  document = ' + JSON.stringify(document, null, '  '))
 
           const index = i
 
-          var header = null
-          try {
-            header = this.getHeader(document.header)
-          } catch (e) {
-            this.log('test  for ' + i + ' >> try { header = this.getHeader(document.header) } catch (e) { \n' + e.message)
-          }
+          // var header = null
+          // try {
+          //   header = this.getHeader(document.header)
+          // } catch (e) {
+          //   this.log('test  for ' + i + ' >> try { header = this.getHeader(document.header) } catch (e) { \n' + e.message)
+          // }
 
-          this.request(false, document.type, baseUrl + document.url, this.getRequest(document.request, null, true), header, function (url, res, err) {
+          this.parseRandom(document.sqlauto, document.header, -1, true, false, false, function (randomName, constConfig, constJson) {
+            App.request(false, document.type, App.server + '/execute', Object.assign(constJson, {
+              uri: baseUrl + document.url
+            }), {}, function (url, res, err) {
+              try {
+                App.onResponse(url, res, err)
+                App.log('test  App.request >> res.data = ' + JSON.stringify(res.data, null, '  '))
+              } catch (e) {
+                App.log('test  App.request >> } catch (e) {\n' + e.message)
+              }
 
-            try {
-              App.onResponse(url, res, err)
-              App.log('test  App.request >> res.data = ' + JSON.stringify(res.data, null, '  '))
-            } catch (e) {
-              App.log('test  App.request >> } catch (e) {\n' + e.message)
-            }
-
-            App.compareResponse(allCount, list, index, item, res.data, isRandom, accountIndex, false, err)
+              App.compareResponse(allCount, list, index, item, res.data, isRandom, accountIndex, false, err)
+            })
           })
         }
 
@@ -6299,7 +6306,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
           this.$refs[toId <= 0 ? 'randomTexts' : 'randomSubTexts'][index].setAttribute('data-hint', (d || {}).config == null ? '' : d.config);
         }
         else {
-          this.$refs['testCaseTexts'][index].setAttribute('data-hint', StringUtil.isEmpty(d.request, true) ? '' : JSON.stringify(this.getRequest(d.request, {}, true), null, ' '));
+          this.$refs['testCaseTexts'][index].setAttribute('data-hint', StringUtil.isEmpty(d.sqlauto, true) ? '' : JSON.stringify(this.getRequest(d.sqlauto, {}, true), null, ' '));
         }
       },
 

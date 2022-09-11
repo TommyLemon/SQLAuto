@@ -2,7 +2,7 @@
   SQLAuto
 </h1>
  
-<p align="center">☔ 机器学习零代码测试 SQL、任意增删改查、任意 SQL 模板变量、一键批量生成</p>
+<p align="center">☔ 智能零代码测试 SQL、任意增删改查、任意 SQL 模板变量、一键批量生成</p>
 
 <p align="center" >
   <a href="https://github.com/TommyLemon/SQLAuto#%E9%83%A8%E7%BD%B2%E6%96%B9%E6%B3%95">使用文档</a>
@@ -10,23 +10,33 @@
   <a href="http://apijson.cn/sql">在线体验</a>
 </p>
 
-<img width="1279" alt="image" src="https://user-images.githubusercontent.com/5738175/188322130-4c9b3578-e235-480d-a6f1-4de521cffcb4.png">
+<img width="1440" alt="018AD342-6A7B-4D4E-ACC2-523196580221" src="https://user-images.githubusercontent.com/5738175/189524723-a178d4e8-c2ef-4adb-ac0a-9d4b627f42ad.png">
+<img width="1440" alt="20E6AE40-DEC5-42A7-8978-6BA1C286FB9B" src="https://user-images.githubusercontent.com/5738175/189524745-06f26fa2-f5de-46a2-9811-a7e2690aa184.png">
+<img width="1440" alt="8A127392-68FB-44A8-94A3-2EC6E629ED6D" src="https://user-images.githubusercontent.com/5738175/189524751-d780b050-b52b-4f97-9fff-d424eb47ad6f.png">
+<img width="1440" alt="60F7F4E4-D0B7-44E1-8692-B24CB56D973A" src="https://user-images.githubusercontent.com/5738175/189524755-a6c109f1-9bfd-4a34-bded-21f0a55bd7fb.png">
+<img width="1440" alt="79387E13-179C-4F16-9620-427AD9C526F9" src="https://user-images.githubusercontent.com/5738175/189524759-8c7b4ab8-1869-4304-b9f0-bc14c086b3f4.png">
+<img width="1440" alt="6298F2D3-7894-4CEE-BDE1-5B8936DB0C90" src="https://user-images.githubusercontent.com/5738175/189524763-3cd43452-54b5-41a6-bcb6-9ff440e4fa42.png">
+<img width="1440" alt="C6B0366D-DAEF-4C60-BCBB-70751E3832C6" src="https://user-images.githubusercontent.com/5738175/189524769-143fdfd0-eae2-43f7-92e7-87a241ee654b.png">
+<img width="1440" alt="A7DEBE5A-8CBD-4B5F-AF1C-CC0CA5EE6F39" src="https://user-images.githubusercontent.com/5738175/189524772-d2068268-2cb2-479b-b9c0-373c18acce43.png">
+<img width="1440" alt="018AD342-6A7B-4D4E-ACC2-523196580221" src="https://user-images.githubusercontent.com/5738175/189524723-a178d4e8-c2ef-4adb-ac0a-9d4b627f42ad.png">
 
 ### 部署方法
 
-本项目是纯静态 SPA 网页，下载源码解压后：<br />
+**本项目前端工具是基于 [APIAuto](https://github.com/TommyLemon/APIAuto) 改造的纯静态 SPA 网页，下载源码解压后：** <br />
 可以用浏览器打开 index.html，建议用 [Chrome](https://www.google.com/intl/zh-CN/chrome) 或 [Firefox](https://www.mozilla.org/zh-CN/firefox) (Safari、Edge、IE 等可能有兼容问题)，注意此方法不显示 svg 图标。<br />
 也可以用 [IntelIJ Webstorm](https://www.jetbrains.com/webstorm/), [IntelliJ IDEA](https://www.jetbrains.com/idea/), [Eclipse](https://www.eclipse.org/) 等 IDE 来打开。<br />
 也可以部署到服务器并用 [Nginx](https://www.jianshu.com/p/11fa3a1a6d65) 或 [Node](https://segmentfault.com/a/1190000039744899) 反向代理，或者 [把源码放到 SpringBoot 项目的 resources/static 目录](https://github.com/APIJSON/APIJSON-Demo/tree/master/APIJSON-Java-Server)。 <br />
-还可以直接访问官方网站 http://apijson.cn/api <br />
+还可以直接访问官方网站 http://apijson.cn/sql <br />
 <br />
-把左侧 URL 输入框内基地址改为你主机的地址(例如 http://localhost:8080 )，<br />
+把左侧 URI 输入框内基地址改为你自己的数据库的连接地址(例如 jdbc:mysql://localhost:3306/sys )，<br />
 然后在右上角 设置 下拉菜单内修改 数据库类型Database、数据库模式Schema。<br />
 <br />
 右上角登录的默认管理员账号为 13000082001 密码为 123456，<br />
 右侧上方中间 3 个标签是默认的测试用户账号，点击登录/退出，左侧 - 删除，右侧 + 新增。<br />
 <br />
-**自动生成文档、自动管理测试用例 这两个功能 需要部署 APIJSON 后端，建议用 APIJSONBoot 系列之一 Demo，见** <br /> 
+
+**后端需要部署 APIJSON-Demo 5.2.5+ 的 APIJSONBoot-MultiDataSource** <br /> 
+DemoSQLConfig 改下 getDBAccount, getDBUri 等返回值，具体见 <br /> 
 https://github.com/APIJSON/APIJSON-Demo/tree/master/APIJSON-Java-Server
 
 ### 常见问题
@@ -41,7 +51,7 @@ https://github.com/TommyLemon/APIAuto/issues/9
 
 如果是其它接口，则一般是以上原因或者被接口不支持 CORS 跨域，可以改为支持， <br />
 或者在 SQLAuto 右上角设置开启托管服务器代理，通过后端代理访问接口， <br />
-注意默认是官网的托管服务器 http://apijson.cn:9090 ，仅支持公网， <br />
+注意默认是官网的托管服务器 http://apijson.cn:8080 ，仅支持公网， <br />
 如果是贵公司内网，请按以上 [部署方法](https://github.com/TommyLemon/APIAuto#%E9%83%A8%E7%BD%B2%E6%96%B9%E6%B3%95) 文档来部署 APIJSON 后端到内网，并修改托管服务器地址。
 
 #### 2.没有生成文档
@@ -52,8 +62,8 @@ https://github.com/Tencent/APIJSON/issues/85
 不能代理接口、不能展示文档、不能对断言结果纠错 等 <br />
 https://github.com/TommyLemon/APIAuto/issues/12
 
-#### 4.apijson.org 访问不了
-管理后台网页改用 http://apijson.cn/api ，托管服务地址改为 http://47.74.39.68:9090  <br />
+#### 4.apijson.cn 访问不了
+托管服务地址改为 http://47.74.39.68:8080  <br />
 https://github.com/TommyLemon/APIAuto/issues/13
 
 更多常见问题 <br />
@@ -69,6 +79,7 @@ https://github.com/TommyLemon/SQLAuto
 ### 技术交流
 ##### 关于作者
 [https://github.com/TommyLemon](https://github.com/TommyLemon)<br />
+<img width="1279" alt="image" src="https://user-images.githubusercontent.com/5738175/189525500-5fe3ba45-c2b3-4df9-9607-c84120111e3c.png">
 
 ##### QQ 群聊
 607020115（群1）<a target="_blank" style="bottom:2px;padding-top:4px" href="https://qm.qq.com/cgi-bin/qm/qr?k=1wnUodOM6ngXnl0rubf06DuAUbOX-u44&jump_from=webapi"><img border="0" src="http://pub.idqqimg.com/wpa/images/group.png" alt="APIJSON-Fee" title="APIJSON技术群1"  style="bottom:2px;margin-top:4px" /></a>    
@@ -80,6 +91,8 @@ https://github.com/TommyLemon/SQLAuto
 ### 其它项目
 
 [APIJSON](https://github.com/Tencent/APIJSON) 腾讯零代码、全功能、强安全 ORM 库 🏆 后端接口和文档零代码，前端(客户端) 定制返回 JSON 的数据和结构
+
+[APIAuto](https://github.com/TommyLemon/APIAuto) 敏捷开发最强大易用的 HTTP 接口工具，机器学习零代码测试、生成代码与静态检查、生成文档与光标悬浮注释
 
 [UnitAuto](https://github.com/TommyLemon/UnitAuto) 机器学习单元测试平台，零代码、全方位、自动化 测试 方法/函数 的正确性和可用性
 

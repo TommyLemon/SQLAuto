@@ -81,11 +81,7 @@ https://github.com/TommyLemon/SQLAuto
 [https://github.com/TommyLemon](https://github.com/TommyLemon)<br />
 <img width="1279" alt="image" src="https://user-images.githubusercontent.com/5738175/189525500-5fe3ba45-c2b3-4df9-9607-c84120111e3c.png">
 
-##### QQ 群聊
-607020115（群1）<a target="_blank" style="bottom:2px;padding-top:4px" href="https://qm.qq.com/cgi-bin/qm/qr?k=1wnUodOM6ngXnl0rubf06DuAUbOX-u44&jump_from=webapi"><img border="0" src="http://pub.idqqimg.com/wpa/images/group.png" alt="APIJSON-Fee" title="APIJSON技术群1"  style="bottom:2px;margin-top:4px" /></a>    
-734652054（群2）<a target="_blank" style="bottom:2px;padding-top:4px" href="https://qm.qq.com/cgi-bin/qm/qr?k=rJLwYzITdoQBfiGUOjMrM3eJDyks1tJP&jump_from=webapi"><img border="0" src="http://pub.idqqimg.com/wpa/images/group.png" alt="APIJSON-Free" title="APIJSON技术群2" style="bottom:2px;margin-top:4px" /></a>    
-
-如果有什么问题或建议可以 [提ISSUE](https://github.com/TommyLemon/SQLAuto/issues) 或 加群，交流技术，分享经验。<br >
+如果有什么问题或建议可以 [提ISSUE](https://github.com/TommyLemon/SQLAuto/issues)，交流技术，分享经验。<br >
 如果你解决了某些bug，或者新增了一些功能，欢迎 [贡献代码](https://github.com/TommyLemon/SQLAuto/pulls)，感激不尽。
 
 ### 其它项目

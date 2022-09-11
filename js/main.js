@@ -697,7 +697,7 @@
       host: '',
       database: 'MYSQL', // 查文档必须，除非后端提供默认配置接口  // 用后端默认的，避免用户总是没有配置就问为什么没有生成文档和注释  'MYSQL',// 'POSTGRESQL',
       schema: 'sys',  // 查文档必须，除非后端提供默认配置接口  // 用后端默认的，避免用户总是没有配置就问为什么没有生成文档和注释   'sys',
-      server: 'http://apijson.cn:9090',  // Chrome 90+ 跨域问题非常难搞，开发模式启动都不行了 'http://apijson.org:9090',  //apijson.cn
+      server: 'http://apijson.cn:8080',  // Chrome 90+ 跨域问题非常难搞，开发模式启动都不行了 'http://apijson.org:9090',  //apijson.cn
       // server: 'http://47.74.39.68:9090',  // apijson.org
       thirdParty: 'SWAGGER /v2/api-docs',  //apijson.cn
       // thirdParty: 'RAP /repository/joined /repository/get',
@@ -3811,7 +3811,9 @@
         this.parseRandom(vInput.value, vHeader.value, -1, true, false, false, function (randomName, constConfig, constJson) {
           vOutput.value = "requesting... \nURL = " + url
           App.view = 'output';
-          var req = constJson;
+          var req = Object.assign(constJson, {
+            uri: url
+          })
 
           App.setBaseUrl()
           App.request(isAdminOperation, App.type, App.server + "/execute", req, isAdminOperation ? {} : header, callback)
@@ -5358,19 +5360,19 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
 
           var invoke = function (val, which, p_k, pathKeys, key, lastKeyInPath) {
             try {
-              if (generateConfig) {
+              // if (generateConfig) {
                 var configVal;
                 if (val instanceof Object) {
                   configVal = JSON.stringify(val);
                 }
                 else if (typeof val == 'string') {
-                  configVal = '"' + val + '"';
+                  configVal = "'" + val + "'";
                 }
                 else {
                   configVal = val
                 }
                 constConfigLines[which] = p_k + ': ' + configVal;
-              }
+              // }
 
               if (generateName) {
                 var valStr;
@@ -5396,8 +5398,10 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
               // if (generateJSON) {
                 //先按照单行简单实现
                 //替换 JSON 里的键值对 key: value
-                code += 'var ' + key + ' = "?";\n';
-                arg.push(val);
+                code += 'var ' + key + ' = ' + (isSingle ? (typeof configVal == 'string' ? '"' + configVal + '"' : configVal) : "'?'") + ';\n';
+                if (isSingle != true) {
+                  arg.push(val);
+                }
               // }
             }
             catch (e) {

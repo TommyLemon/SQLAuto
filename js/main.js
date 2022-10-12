@@ -3198,6 +3198,7 @@
 
         const req = {
           type: 0, // 登录方式，非必须 0-密码 1-验证码
+          asDBAccount: ! isAdminOperation,  // 直接 /execute 接口传 account, password
           phone: this.account,
           password: this.password,
           version: 1, // 全局默认版本号，非必须
@@ -3267,10 +3268,10 @@
           // this.showUrl(isAdminOperation, '/login')
 
           // vInput.value = JSON.stringify(req, null, '    ')
-          this.type = REQUEST_TYPE_JSON
-          this.showTestCase(false, this.isLocalShow)
-          this.onChange(false)
-          this.send(isAdminOperation, function (url, res, err) {
+          // this.type = REQUEST_TYPE_JSON
+          // this.showTestCase(false, this.isLocalShow)
+          // this.onChange(false)
+          this.request(isAdminOperation, REQUEST_TYPE_JSON, this.server + '/login', req, {},function (url, res, err) {
             if (callback) {
               callback(url, res, err)
               return
@@ -3401,11 +3402,11 @@
         }
         else {
           this.showUrl(isAdminOperation, '/logout')
-          vInput.value = JSON.stringify(req, null, '    ')
-          this.type = REQUEST_TYPE_JSON
+          // vInput.value = JSON.stringify(req, null, '    ')
+          // this.type = REQUEST_TYPE_JSON
           this.showTestCase(false, this.isLocalShow)
           this.onChange(false)
-          this.send(isAdminOperation, callback)
+          this.request(isAdminOperation, REQUEST_TYPE_JSON, this.server + '/logout', req, {}, callback)
         }
       },
 
@@ -3865,6 +3866,19 @@
             header = {};
           }
           header['Apijson-Delegate-Id'] = this.delegateId
+        }
+
+        var curUser = isAdminOperation ? null : this.getCurrentAccount()
+        if (curUser != null) {
+          if (req == null) {
+            req = {}
+          }
+          if (req.account == null) {
+            req.account = curUser.phone
+          }
+          if (req.password == null) {
+            req.password = curUser.password
+          }
         }
 
         // axios.defaults.withcredentials = true

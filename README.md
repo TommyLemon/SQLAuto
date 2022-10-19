@@ -20,7 +20,19 @@
 <img width="1440" alt="A7DEBE5A-8CBD-4B5F-AF1C-CC0CA5EE6F39" src="https://user-images.githubusercontent.com/5738175/189524772-d2068268-2cb2-479b-b9c0-373c18acce43.png">
 <img width="1440" alt="018AD342-6A7B-4D4E-ACC2-523196580221" src="https://user-images.githubusercontent.com/5738175/189524723-a178d4e8-c2ef-4adb-ac0a-9d4b627f42ad.png">
 
-### 部署方法
+如果 SQL 语句是 INSERT 插入语句，则可以快速生成 1000+ 条测试数据(表记录)，方便前后端联调接口，可按规则生成。
+例如 
+```sql
+INSERT INTO sys.apijson_user(id, sex, name) VALUES(${id}, ${sex}, ${name})
+```
+1000 次参数注入 Random Test：
+```js
+id: new Date().getTime()  // 当前时间毫秒值
+sex: RANDOM_IN(0, 1)  // 随机从 0, 1 中取值
+name: 'Test ' + new Date().toLocaleTimeString()  // 通过代码自定义
+```
+
+### 快速上手
 
 **本项目前端工具是基于 [APIAuto](https://github.com/TommyLemon/APIAuto) 改造的纯静态 SPA 网页，下载源码解压后：** <br />
 可以用浏览器打开 index.html，建议用 [Chrome](https://www.google.com/intl/zh-CN/chrome) 或 [Firefox](https://www.mozilla.org/zh-CN/firefox) (Safari、Edge、IE 等可能有兼容问题)，注意此方法不显示 svg 图标。<br />

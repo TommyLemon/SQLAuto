@@ -12,6 +12,16 @@
  See the License for the specific language governing permissions and
  limitations under the License.*/
 
+if (typeof window == 'undefined') {
+  try {
+    eval(`
+      var StringUtil = require("./StringUtil");
+      var JSONObject = require("./JSONObject");
+    `)
+  } catch (e) {
+    console.log(e)
+  }
+}
 
 /**util for generate code
  * @author Lemon
@@ -6716,4 +6726,8 @@ var CodeUtil = {
     return (targetType == 'number' && realType == 'integer') || (targetType == 'string' && ['date', 'time', 'datetime'].indexOf(realType) >= 0);
   }
 
+};
+
+if (typeof module == 'object') {
+  module.exports = CodeUtil;
 }

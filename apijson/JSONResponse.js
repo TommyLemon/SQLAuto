@@ -17,6 +17,17 @@
  * @author Lemon
  */
 
+if (typeof window == 'undefined') {
+  try {
+    eval(`
+      var StringUtil = require("./StringUtil");
+      var JSONObject = require("./JSONObject");
+      var CodeUtil = require("./CodeUtil");
+    `)
+  } catch (e) {
+    console.log(e)
+  }
+}
 
 //状态信息，非GET请求获得的信息<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -59,8 +70,19 @@ var JSONResponse = {
    * @param code
    * @return
    */
-  isSuccess: function(code) {
-    return code == CODE_SUCCESS;
+  isSuccess: function(obj) {
+    if (obj == null) {
+      return false
+    }
+
+    if (typeof obj == 'number') {
+      return obj == CODE_SUCCESS;
+    }
+    if (obj instanceof Object && obj instanceof Array == false) {
+      return obj.code == CODE_SUCCESS;
+    }
+
+    return false
   },
 
   /**校验服务端是否存在table
@@ -370,10 +392,10 @@ var JSONResponse = {
         };
       }
 
-      if (real == null || real.data == null) {
+      if (real == null || real.list == null) {
         return {
           code: JSONResponse.COMPARE_KEY_LESS, //未上传对比标准
-          msg: '没有校验标准，且缺少非 null 值的 data 字段',
+          msg: '没有校验标准，且缺少非 null 值的 list 字段',
           path: folder == null ? '' : folder
         };
       }
@@ -1544,4 +1566,8 @@ var JSONResponse = {
     return value;
   }
 
+};
+
+if (typeof module == 'object') {
+  module.exports = JSONResponse;
 }

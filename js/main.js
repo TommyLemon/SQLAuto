@@ -496,7 +496,7 @@
 
 
   function markdownToHTML(md, isRequest) {
-    if (editormd == null) {
+    if (typeof editormd == 'undefined' || editormd == null) {
       return;
     }
 
@@ -4911,29 +4911,10 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
         var page = this.page || 0
 
         var search = StringUtil.isEmpty(this.search, true) ? null : '%' + StringUtil.trim(this.search) + '%'
-        this.request(false, REQUEST_TYPE_JSON, this.getBaseUrl() + '/get', {
+        this.request(false, REQUEST_TYPE_JSON, this.server + '/get', {
           format: false,
           '@database': StringUtil.isEmpty(this.database, true) ? undefined : this.database,
           // '@schema': StringUtil.isEmpty(this.schema, true) ? undefined : this.schema,
-          'sql@': {
-            'from': 'Access',
-            'Access': {
-              '@column': 'name'
-            }
-          },
-          'Access[]': {
-            'count': count,
-            'page': page,
-            'Access': {
-              '@column': 'name,alias,get,head,gets,heads,post,put,delete',
-              '@order': 'date-,name+',
-              'name()': 'getWithDefault(alias,name)',
-              'r0()': 'removeKey(alias)',
-              'name$': search,
-              'alias$': search,
-              '@combine': search == null ? null : 'name$,alias$',
-            }
-          },
           '[]': {
             'count': count,
             'page': page,
@@ -4944,7 +4925,6 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
               'table_name$': search,
               'table_comment$': this.database == 'POSTGRESQL' ? null : search,
               '@combine': search == null || this.database == 'POSTGRESQL' ? null : 'table_name$,table_comment$',
-              'table_name{}@': 'sql',
               '@order': 'table_name+', //MySQL 8 SELECT `table_name` 返回的仍然是大写的 TABLE_NAME，需要 AS 一下
               '@column': this.database == 'POSTGRESQL' ? 'table_name' : 'table_name:table_name,table_comment:table_comment'
             },
@@ -5022,32 +5002,6 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
     		        "@column": "COMMENTS:column_comment"
     		      }
             }
-          },
-          'Function[]': {
-            'count': count,
-            'page': page,
-            'Function': {
-              '@order': 'date-,name+',
-              '@column': 'name,arguments,demo,detail',
-              'demo()': 'getFunctionDemo()',
-              'detail()': 'getFunctionDetail()',
-              'r0()': 'removeKey(name)',
-              'r1()': 'removeKey(arguments)',
-              'name$': search,
-              'detail$': search,
-              '@combine': search == null ? null : 'name$,detail$',
-            }
-          },
-          'Request[]': {
-            'count': count,
-            'page': page,
-            'Request': {
-              '@order': 'version-,method-',
-              '@json': 'structure',
-              'tag$': search,
-              // 界面又不显示这个字段，搜出来莫名其妙 'detail$': search,
-              // '@combine': search == null ? null : 'tag$,detail$',
-            }
           }
         }, {}, function (url, res, err) {
           if (err != null || res == null || res.data == null) {
@@ -5095,7 +5049,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
               // item.Table.table_name = table.table_name
               // item.Table.table_comment = table_comment
 
-              doc += '### ' + (i + 1) + '. ' + CodeUtil.getModelName(table.table_name) + '\n'
+              doc += '### ' + (i + 1) + '. ' + StringUtil.get(table.table_name) + '\n'
                 + App.toMD(table_comment);
 
 

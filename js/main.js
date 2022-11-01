@@ -4154,7 +4154,7 @@
                     first = false
                   }
 
-                  var md = '### ' + len + ' results:\n\n' + h + '\n' + d
+                  var md = '<h3 style="color: dodgerblue" onclick="window.App._data.view=\'code\'"><- ' + len + ' results:</h3>\n\n' + h + '\n' + d
                   for (var i = 0; i < len; i++) {
                     var item = list[i];
                     if (item == null) {
@@ -4165,7 +4165,7 @@
                     var first = true
                     for (var k in item) {
                       var v = item[k]
-                      md += (first ? '' : '  |  ') + (v == null ? '<NULL>' : App.toMD(v))
+                      md += (first ? '' : '  |  ') + App.toMD(v)  // (v == null ? '&lt;a style="color:red"&gt;&lt;NULL&gt;&lt;/a&gt;' : App.toMD(v))
                       first = false
                     }
                   }
@@ -7706,6 +7706,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
 
   if (IS_BROWSER) {
     App = new Vue(App)
+    window.App = App
   }
   else {
     var data = App.data

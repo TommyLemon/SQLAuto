@@ -3879,17 +3879,17 @@
 
             var m = null  // this.getMethod();
             var w = isSingle || this.isEditResponse ? '' : StringUtil.trim(CodeUtil.parseComment(after, docObj == null ? null : docObj['[]'], m, this.database, this.language, this.isEditResponse != true, standardObj, null, true, isAPIJSONRouter));
-            var c = isSingle ? '' : StringUtil.trim(CodeUtil.parseComment(after, docObj == null ? null : docObj['[]'], m, this.database, this.language, this.isEditResponse != true, standardObj, null, null, isAPIJSONRouter));
+            var c = isSingle ? '' : StringUtil.get(vInput.value) // StringUtil.trim(CodeUtil.parseComment(after, docObj == null ? null : docObj['[]'], m, this.database, this.language, this.isEditResponse != true, standardObj, null, null, isAPIJSONRouter));
 
             //TODO 统计行数，补全到一致 vInput.value.lineNumbers
             if (isSingle != true) {
-              if (afterObj.tag == null) {
-                m = m == null ? 'GET' : m.toUpperCase()
-                if (['GETS', 'HEADS', 'POST', 'PUT', 'DELETE'].indexOf(m) >= 0) {
-                  w += ' ! 非开放请求必须设置 tag ！例如 "tag": "User"'
-                  c += ' ! 非开放请求必须设置 tag ！例如 "tag": "User"'
-                }
-              }
+              // if (afterObj.tag == null) {
+              //   m = m == null ? 'GET' : m.toUpperCase()
+              //   if (['GETS', 'HEADS', 'POST', 'PUT', 'DELETE'].indexOf(m) >= 0) {
+              //     w += ' ! 非开放请求必须设置 tag ！例如 "tag": "User"'
+              //     c += ' ! 非开放请求必须设置 tag ！例如 "tag": "User"'
+              //   }
+              // }
 
               if (StringUtil.isEmpty(detail, true)) {
                 c += extraComment == null ? '' : ('\n\n/*' + extraComment + '\n*/');
@@ -3939,7 +3939,7 @@
               var end = raw.lastIndexOf('\n*\/')
               var ct = start < 0 || end <= start ? '' : StringUtil.trim(raw.substring(start + '\n\/*'.length, end))
 
-              markdownToHTML('```js\n' + (start < 0 || end <= start ? raw : raw.substring(0, start)) + '\n```\n'
+              markdownToHTML('```sql\n' + (start < 0 || end <= start ? raw : raw.substring(0, start)) + '\n```\n'
                 + (StringUtil.isEmpty(ct, true) ? '' : ct + '\n\n```js\n' + ct + '\n```\n'), true);
             } catch (e3) {
               log(e3)

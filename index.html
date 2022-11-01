@@ -349,9 +349,9 @@ ORDER_INT(min:Integer, max:Integer)  // 从范围内顺序取整数
 ORDER_DB(min:Integer, max:Integer, table:String, column:String)  // 从数据库顺序取值
 其中 RANDOM 开头的是随机函数；ORDER 开头的是顺序函数，可以使用 + - 升降序 和 step 跨步，例如 ORDER_IN-(1, 2, 3) 降序取值，ORDER_INT+3(0, 100) 间隔 step = 3 位来升序取整数。
 # 模板：
-format: ORDER_IN(true, false, null, undefined)  // 从选项中顺序取值
-User/id: RANDOM_DB()  // 从数据库随机取值，等价于 User/id: RANDOM_DB(null, null, 'User', 'id')
-[]/page: Math.round(100*Math.random())  // 通过 JavaScript 代码来自定义 [] 内的 page
+searchKey: ORDER_IN('%a%', '%b%c%', null, undefined)  // 从选项中顺序取值
+userId: RANDOM_DB(0, 100000, 'Comment', 'userId')  // 从数据库随机取值
+limit: Math.round(100*Math.random())  // 通过 JavaScript 代码来自定义 [] 内的 page
 ">
 searchKey: '%a%'  // 固定常量值
 userId: RANDOM_IN(82001, 82002, 82003)  // 随机选项取值
@@ -606,7 +606,7 @@ offset: RANDOM_INT(0, 5)  // 随机范围取值
                                     <div class="form-group">
                                         <label for="vAccount">账号</label>
 
-                                        <input id="vAccount" type="text" class="form-control" name="account" v-model="account" value="13000082001" required autofocus />
+                                        <input id="vAccount" type="text" class="form-control" name="account" v-model="account" value="13000082003" required autofocus />
                                     </div>
 
                                     <div class="form-group">

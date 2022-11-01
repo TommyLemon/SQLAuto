@@ -676,10 +676,16 @@
       testCases: [],
       randoms: [],
       randomSubs: [],
-      account: '13000082001',
+      account: '13000082003',
       password: '123456',
       logoutSummary: {},
       accounts: [
+        {
+          'isLoggedIn': false,
+          'name': '测试账号3',
+          'phone': '13000082003',
+          'password': '123456'
+        },
         {
           'isLoggedIn': false,
           'name': '测试账号1',
@@ -690,12 +696,6 @@
           'isLoggedIn': false,
           'name': '测试账号2',
           'phone': '13000082002',
-          'password': '123456'
-        },
-        {
-          'isLoggedIn': false,
-          'name': '测试账号3',
-          'phone': '13000082003',
           'password': '123456'
         }
       ],
@@ -3487,7 +3487,7 @@
 
         if (user == null || StringUtil.isEmpty(user.phone, true)) {
           user = {
-            phone: '13000082001',
+            phone: '13000082003',
             password: '123456'
           }
         }
@@ -5828,6 +5828,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
         var constConfigLines = [] //TODO 改为 [{ "rawPath": "User/id", "replacePath": "User/id@", "replaceValue": "RANDOM_INT(1, 10)", "isExpression": true }] ?
 
         // alert('< sql = ' + JSON.stringify(json, null, '    '))
+        var lastVarIndex = -1;
 
         for (let i = 0; i < reqCount; i ++) {
           const which = i;
@@ -5855,6 +5856,17 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
           // path User/id  key id@
           const index = line.indexOf(': '); //APIJSON Table:alias 前面不会有空格 //致后面就接 { 'a': 1} 报错 Unexpected token ':'   lastIndexOf(': '); // indexOf(': '); 可能会有 Comment:to
           const p_k = line.substring(0, index);
+
+          var varIndex = sql.indexOf('${' + p_k + '}')
+          if (varIndex <= 0) {
+            throw new Error('参数配置第 ' + (i + 1) + ' 行错误！ \n' + p_k + ': value 必须对应以上 SQL 中有 ${' + p_k + '} ！\n不允许任何多余的空格！\n必须按 SQL 中变量的顺序配置参数，且 SQL 中不允许同名变量！')
+          }
+          if (varIndex <= lastVarIndex) {
+            throw new Error('参数配置第 ' + (i + 1) + ' 行位置错误！\n' + p_k + ': value 必须按在 SQL 中变量 ${' + p_k + '} 的位置配置参数，且 SQL 中不允许同名变量！')
+          }
+
+          lastVarIndex = varIndex
+
           const bi = -1;  //没必要支持，用 before: undefined, after: .. 同样支持替换，反而这样导致不兼容包含空格的 key   p_k.indexOf(' ');
           const path = bi < 0 ? p_k : p_k.substring(0, bi); // User/id
 

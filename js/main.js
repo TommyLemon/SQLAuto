@@ -648,6 +648,8 @@
   var baseUrl
   var inputted
   var handler
+  // var lastRes
+  var gridHandler
   var docObj
   var doc
   var output
@@ -1019,7 +1021,18 @@
       },
 
       getRequest: function (sql, defaultValue, isRaw) {  // JSON5 兜底，减少修改范围  , isSingle) {
-        return sql == null ? defaultValue : sql;
+        if (sql == null) {
+          return defaultValue
+        }
+
+        var start = sql.lastIndexOf('\n\/*')
+        var end = sql.lastIndexOf('\n*/')
+        if (start < 0 || start >= end) {
+          return sql.trim()
+        }
+
+        return sql.substring(0, start).trim()
+
         // var s = isRaw != true && isSingle ? this.switchQuote(json) : json; // this.toDoubleJSON(json, defaultValue);
         // if (StringUtil.isEmpty(s, true)) {
         //   return defaultValue
@@ -4139,7 +4152,15 @@
             App.setBaseUrl()
             App.request(isAdminOperation, App.type, App.server + "/sql/execute", req, isAdminOperation ? {} : header, callback || function (url, res, err) {
               App.onResponse(url, res, err)
-              setTimeout(function () {
+              clearTimeout(gridHandler)
+              // lastRes = res
+              gridHandler = setTimeout(function () {
+                // 导致连续多次相同请求后，不显示表格
+                // if (lastRes !== res) {
+                //   clearTimeout(gridHandler)
+                //   return
+                // }
+
                 var data = App.isRandomTest || App.isTestCaseShow || (App.randomAllCount > 0 && App.randomDoneCount < App.randomAllCount) ? null : res.data
                 var list = JSONResponse.isSuccess(data) ? data.list : null
                 var len = list == null ? 0 : list.length
@@ -4177,7 +4198,8 @@
                   App.view = 'markdown'
                   markdownToHTML(md)
                 }
-              }, 1000)
+              }
+              , 1000)
             })
 
             App.locals = App.locals || []
@@ -5817,7 +5839,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
        * @param callback
        */
       parseRandom: function (sql, config, randomId, generateJSON, generateConfig, generateName, callback) {
-        sql = StringUtil.trim(sql)
+        sql = this.getRequest(sql, '')
         var sqlLines = sql.split('\n')
         var newSql = ''
         for (let i = 0; i < sqlLines.length; i ++) {

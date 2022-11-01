@@ -4161,7 +4161,7 @@
                 //   return
                 // }
 
-                var data = App.isRandomTest || App.isTestCaseShow || (App.randomAllCount > 0 && App.randomDoneCount < App.randomAllCount) ? null : res.data
+                var data = App.isTestCaseShow || (App.randomAllCount > 0 && App.randomDoneCount < App.randomAllCount) ? null : res.data
                 var list = JSONResponse.isSuccess(data) ? data.list : null
                 var len = list == null ? 0 : list.length
                 if (len > 0) {

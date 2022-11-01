@@ -439,6 +439,7 @@
   })
 
 
+
   var initJson = {}
 
 // 主题 [key, String, Number, Boolean, Null, link-link, link-hover]
@@ -485,6 +486,7 @@
           v = JSON.parse(v)
         }
         catch (e) {
+          this.log(e)
         }
       }
 
@@ -1050,7 +1052,7 @@
             item = hs[i] || ''
 
             // 解决整体 trim 后第一行  // 被当成正常的 key 路径而不是注释
-            var index = StringUtil.trim(item).startsWith('//') ? 0 : item.lastIndexOf('  //')  // 不加空格会导致 http:// 被截断  ('//')  //这里只支持单行注释，不用 removeComment 那种带多行的去注释方式
+            var index = StringUtil.trim(item).startsWith('//') ? 0 : item.lastIndexOf(' //')  // 不加空格会导致 http:// 被截断  ('//')  //这里只支持单行注释，不用 removeComment 那种带多行的去注释方式
             var item2 = index < 0 ? item : item.substring(0, index)
             item2 = item2.trim()
             if (item2.length <= 0) {
@@ -1085,17 +1087,6 @@
 
       // 分享 SQLAuto 特有链接，打开即可还原分享人的 JSON 参数、设置项、搜索关键词、分页数量及页码等配置
       shareLink: function (isRandom) {
-        var jsonStr = null
-        if (this.isTestCaseShow != true) {
-          try {
-            jsonStr = JSON.stringify(encode(JSON.parse(vInput.value)))
-          } catch (e) {  // 可能包含注释
-            log(e)
-            jsonStr = encode(StringUtil.trim(vInput.value))
-          }
-        }
-
-        // URL 太长导致打不开标签
         var settingStr = null
         try {
           settingStr = JSON.stringify({
@@ -1129,26 +1120,51 @@
             randomSearch: StringUtil.isEmpty(this.randomSearch, true) ? undefined : encodeURIComponent(this.randomSearch),
             randomSubSearch: StringUtil.isEmpty(this.randomSubSearch, true) ? undefined : encodeURIComponent(this.randomSubSearch)
           })
-        } catch (e){
+        } catch (e) {
           log(e)
         }
 
-        var headerStr = this.isTestCaseShow || StringUtil.isEmpty(vHeader.value, true) ? null : encodeURIComponent(StringUtil.trim(vHeader.value))
-        var randomStr = this.isTestCaseShow || StringUtil.isEmpty(vRandom.value, true) ? null : encodeURIComponent(StringUtil.trim(vRandom.value))
+        // 实测 561059 长度的 URL 都支持，只是输入框显示长度约为 2000
+        window.open(this.getShareLink(
+          isRandom
+          , null
+          , null
+          , null
+          , this.isTestCaseShow || StringUtil.isEmpty(vHeader.value, true) ? null : encodeURIComponent(StringUtil.trim(vHeader.value))
+          , this.isTestCaseShow || StringUtil.isEmpty(vRandom.value, true) ? null : encodeURIComponent(StringUtil.trim(vRandom.value))
+          , settingStr
+        ))
+      },
+      getShareLink: function (isRandom, json, url, type, header, random, setting) {
+        var jsonStr = json == null ? null : (typeof json == 'string' ? json : JSON.stringify(json))
+        if (this.isTestCaseShow != true && jsonStr == null) { // StringUtil.isEmpty(jsonStr)
+          try {
+            jsonStr = JSON.stringify(encode(JSON.parse(vInput.value)))
+          } catch (e) {  // 可能包含注释
+            log(e)
+            jsonStr = encode(StringUtil.trim(vInput.value))
+          }
+        }
+
+        var headerStr = header
+
+        var randomStr = random
+
+        // URL 太长导致打不开标签
+        var settingStr = setting
 
         var href = window.location.href || 'http://apijson.cn/api'
         var ind = href == null ? -1 : href.indexOf('?')  // url 后带参数只能 encodeURIComponent
 
-        // 实测 561059 长度的 URL 都支持，只是输入框显示长度约为 2000
-        window.open((ind < 0 ? href : href.substring(0, ind))
+        return (ind < 0 ? href : href.substring(0, ind))
           + (this.view != 'code' ? "?send=false" : (isRandom ? "?send=random" : "?send=true"))
-          + "&type=" + StringUtil.trim(this.type)
-          + "&url=" + encodeURIComponent(StringUtil.trim(vUrl.value))
-          + (StringUtil.isEmpty(jsonStr, true) ? '' : "&json=" + jsonStr)
-          + (StringUtil.isEmpty(headerStr, true) ? '' : "&header=" + headerStr)
-          + (StringUtil.isEmpty(randomStr, true) ? '' : "&random=" + randomStr)
-          + (StringUtil.isEmpty(settingStr, true) ? '' : "&setting=" + settingStr)
-        )
+          + "&type=" + StringUtil.trim(type == null ? REQUEST_TYPE_JSON : type)
+          + "&url=" + encodeURIComponent(StringUtil.trim(url == null ? vUrl.value : url))
+          + (jsonStr == null ? '' : "&json=" + jsonStr)
+          + (headerStr == null ? '' : "&header=" + headerStr)
+          + (randomStr == null ? '' : "&random=" + randomStr)
+          + (settingStr == null ? '' : "&setting=" + settingStr)
+
       },
 
       // 显示保存弹窗
@@ -1877,7 +1893,7 @@
           delete currentResponse.throw; //throw必须一致
 
           var rsp = JSON.parse(JSON.stringify(currentResponse || {}))
-          rsp = JSONResponse.array2object(rsp, 'arg', ['arg'], true)
+          rsp = JSONResponse.array2object(rsp, 'args', ['args'], true)
 
           const isML = this.isMLEnabled;
           const stddObj = isML ? JSONResponse.updateStandard({}, rsp) : {};
@@ -3498,6 +3514,7 @@
       login: function (isAdminOperation, callback) {
         this.isLoginShow = false
         this.isEditResponse = false
+        var schemas = StringUtil.isEmpty(this.schema, true) ? null : StringUtil.split(this.schema)
 
         const req = {
           type: 0, // 登录方式，非必须 0-密码 1-验证码
@@ -3511,7 +3528,7 @@
             key: IS_NODE ? this.key : undefined  // 突破常规查询数量限制
           } : {
             '@database': StringUtil.isEmpty(this.database, true) ? undefined : this.database,
-            '@schema': StringUtil.isEmpty(this.schema, true) ? undefined : this.schema
+            '@schema': schemas == null || schemas.length != 1 ? undefined : this.schema
           }
         }
 
@@ -3785,7 +3802,7 @@
             try {
               afterObj = {
                 sql: json,
-                arg: arg
+                args: arg
               }
 
               //FIXME 用前端的 SQL Parser 库
@@ -3800,7 +3817,7 @@
               try {
                 afterObj = {
                   sql: json,
-                  arg: arg
+                  args: arg
                 }
 
                 // afterObj = JSON5.parse(json);  // jsonlint.parse(this.removeComment(before));
@@ -4111,34 +4128,41 @@
           return
         }
 
-        this.parseRandom(vInput.value, vHeader.value, -1, true, false, false, function (randomName, constConfig, constJson) {
-          vOutput.value = "requesting... \nURL = " + url
-          App.view = 'output';
-          var req = Object.assign(constJson, {
-            uri: url
-          })
+        try {
+          this.parseRandom(vInput.value, vHeader.value, -1, true, false, false, function (randomName, constConfig, constJson) {
+            vOutput.value = "requesting... \nURL = " + url
+            App.view = 'output';
+            var req = Object.assign(constJson, {
+              uri: url
+            })
 
-          App.setBaseUrl()
-          App.request(isAdminOperation, App.type, App.server + "/sql/execute", req, isAdminOperation ? {} : header, callback)
+            App.setBaseUrl()
+            App.request(isAdminOperation, App.type, App.server + "/sql/execute", req, isAdminOperation ? {} : header, callback)
 
-          App.locals = App.locals || []
-          if (App.locals.length >= 1000) { //最多1000条，太多会很卡
-            App.locals.splice(999, App.locals.length - 999)
-          }
-          var method = App.getMethod()
-          App.locals.unshift({
-            'Document': {
-              'userId': App.User.id,
-              'name': App.formatDateTime() + ' ' + (App.urlComment || StringUtil.trim(req.tag)),
-              'type': App.type,
-              'url': '/' + method,
-              'request': '{}',
-              'sqlauto': req,
-              'header': vHeader.value
+            App.locals = App.locals || []
+            if (App.locals.length >= 1000) { //最多1000条，太多会很卡
+              App.locals.splice(999, App.locals.length - 999)
             }
+            var method = App.getMethod()
+            App.locals.unshift({
+              'Document': {
+                'userId': App.User.id,
+                'name': App.formatDateTime() + ' ' + (App.urlComment || StringUtil.trim(req.tag)),
+                'type': App.type,
+                'url': '/' + method,
+                'request': '{}',
+                'sqlauto': req,
+                'header': vHeader.value
+              }
+            })
+            App.saveCache('', 'locals', App.locals)
           })
-          App.saveCache('', 'locals', App.locals)
-        })
+        } catch (e) {
+          this.view = 'error'
+          this.error = {
+            msg: e.message
+          }
+        }
       },
 
       //请求
@@ -4549,7 +4573,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
           //           continue;
           //         }
           //
-          //         var ind = l.lastIndexOf('  //');
+          //         var ind = l.lastIndexOf(' //');
           //         l = ind < 0 ? l : StringUtil.trim(l.substring(0, ind));
           //
           //         ind = l.indexOf(':');
@@ -4881,7 +4905,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
           return false;
         }
         doc = d;
-        vOutput.value += (
+        vOutput.value = (this.isTestCaseShow ? '' : output) + (
           '\n\n\n## 文档 \n\n 通用文档见 [APIJSON通用文档](https://github.com/Tencent/APIJSON/blob/master/Document.md#3.2) \n### 数据字典\n自动查数据库表和字段属性来生成 \n\n' + d
           + '<h3 align="center">关于</h3>'
           + '<p align="center">SQLAuto-智能零代码 SQL 数据库测试 工具'
@@ -4910,6 +4934,8 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
         var count = this.count || 100  //超过就太卡了
         var page = this.page || 0
 
+        var schemas = StringUtil.isEmpty(this.schema, true) ? null : StringUtil.split(this.schema)
+
         var search = StringUtil.isEmpty(this.search, true) ? null : '%' + StringUtil.trim(this.search) + '%'
         this.request(false, REQUEST_TYPE_JSON, this.server + '/get', {
           format: false,
@@ -4919,14 +4945,14 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
             'count': count,
             'page': page,
             'Table': isTSQL || this.database == 'SQLSERVER' ? null : {
-              'table_schema': this.schema,
+              'table_schema{}': schemas,
               'table_type': 'BASE TABLE',
               // 'table_name!$': ['\\_%', 'sys\\_%', 'system\\_%'],
               'table_name$': search,
               'table_comment$': this.database == 'POSTGRESQL' ? null : search,
               '@combine': search == null || this.database == 'POSTGRESQL' ? null : 'table_name$,table_comment$',
               '@order': 'table_name+', //MySQL 8 SELECT `table_name` 返回的仍然是大写的 TABLE_NAME，需要 AS 一下
-              '@column': this.database == 'POSTGRESQL' ? 'table_name' : 'table_name:table_name,table_comment:table_comment'
+              '@column': (schemas != null && schemas.length == 1 ? '' : 'table_schema:table_schema,') + (this.database == 'POSTGRESQL' ? 'table_name' : 'table_name:table_name,table_comment:table_comment')
             },
             'PgClass': this.database != 'POSTGRESQL' ? null : {
               'relname@': '/Table/table_name',
@@ -4967,7 +4993,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
             '[]': {
               'count': 0,
               'Column': isTSQL ? null : {
-                'table_schema': this.schema,
+                'table_schema{}': schemas,
                 'table_name@': this.database != 'SQLSERVER' ? '[]/Table/table_name' : "[]/SysTable/table_name",
                 "@order": this.database != 'SQLSERVER' ? null : "table_name+",
                 '@column': this.database == 'POSTGRESQL' || this.database == 'SQLSERVER'  //MySQL 8 SELECT `column_name` 返回的仍然是大写的 COLUMN_NAME，需要 AS 一下
@@ -5049,8 +5075,39 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
               // item.Table.table_name = table.table_name
               // item.Table.table_comment = table_comment
 
-              doc += '### ' + (i + 1) + '. ' + StringUtil.get(table.table_name) + '\n'
-                + App.toMD(table_comment);
+              var schema = table.table_schema
+
+              doc += '\n### ' + (i + 1) + '. ' + (StringUtil.isEmpty(schema, true) ? '' : schema + '.')
+                + StringUtil.get(table.table_name)
+                + '  - [INSERT](' + App.getShareLink(false,
+                encodeURIComponent('INSERT INTO ' + table.table_name
+                + '\n# ('
+                + '\n# )'  // + '\n# %29'
+                + '\nVALUES('
+                // + '\n# TODO '
+                + '\n)').replaceAll(')', '%29')
+                  , StringUtil.isEmpty(schema, true) ? null : App.getBaseUrl() + '/' + schema, null, '', '') + ') '
+                + '[SELECT](' + App.getShareLink(false,
+                encodeURIComponent('SELECT * FROM ' + table.table_name
+                + '\n# WHERE id = 1 AND userId > 0'
+                + '\n# GROUP BY userId'
+                + '\n# HAVING avg(id)>10'
+                + '\n# ORDER BY id DESC'
+                + '\nLIMIT 10'
+                + '\n# OFFSET 10').replaceAll(')', '%29')
+                  , StringUtil.isEmpty(schema, true) ? null : App.getBaseUrl() + '/' + schema, null, '', '') + ') '
+                + '[UPDATE](' + App.getShareLink(false,
+                encodeURIComponent('UPDATE ' + table.table_name
+                + '\nSET userId = 2 '
+                + '\nWHERE id = 1 AND userId = 1'
+                + '\n# LIMIT 1').replaceAll(')', '%29')
+                  , StringUtil.isEmpty(schema, true) ? null : App.getBaseUrl() + '/' + schema, null, '', '') + ') '
+                + '[DELETE](' + App.getShareLink(false,
+                encodeURIComponent('DELETE FROM ' + table.table_name
+                + '\nWHERE id = 1 AND userId = 1'
+                + '\n# LIMIT 1').replaceAll(')', '%29')
+                  , StringUtil.isEmpty(schema, true) ? null : App.getBaseUrl() + '/' + schema, null, '', '') + ') '
+                + '\n' + App.toMD(table_comment);
 
 
               //Column[]
@@ -5713,17 +5770,50 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
        * @param callback
        */
       parseRandom: function (sql, config, randomId, generateJSON, generateConfig, generateName, callback) {
+        sql = StringUtil.trim(sql)
+        var sqlLines = sql.split('\n')
+        var newSql = ''
+        for (let i = 0; i < sqlLines.length; i ++) {
+          var line = sqlLines[i] || ''
+          var trimmedLine = line.trim()
+          if (trimmedLine.startsWith('#') || trimmedLine.startsWith('--')) {
+            continue
+          }
+
+          // 不支持，用 /* */ 替代，尽可能避免误判 WHERE left(title) = ' #' TODO 使用第三方 SQL formatter
+          // FIXME 或者哪怕 random config 中是注释掉的也给解析，最后再调第三方 SQL formatter 来移除注释？
+          // var start = trimmedLine.indexOf(' #')
+          // if (start >= 0) {
+          //   newSql += '\n' + line.substring(start + 2)
+          //   continue
+          // }
+
+          var start = trimmedLine.indexOf('/*')
+          var end = start < 0 ? -1 : trimmedLine.indexOf('*/')
+          if (start >= 0 && end > start) {
+            newSql += '\n' + line.substring(0, start) + ' ' + line.substring(end + 2)
+            continue
+          }
+
+          newSql += '\n' + line
+        }
+        if (newSql.length > 0) {
+          sql = newSql
+        }
+
+        var args = []
+
         var lines = config == null ? null : config.trim().split('\n')
         if (lines == null || lines.length <= 0) {
           // return null;
-          callback(null, null, null);
+          callback(null, null, {
+            sql: sql,
+            args: args
+          });
           return
         }
 
-        sql = StringUtil.trim(sql)
-
         var code = ''
-        var arg = []
         // TODO 新增一个默认参数面板，自动将 SQL 里的变量生成 hint 到
 
         // var req = this.getRequest(vInput.value, {})
@@ -5750,10 +5840,13 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
           if (line.length <= 0) {
             respCount ++;
             if (i >= lines.length - 1 && respCount >= reqCount) {
+              code += 'return `' + sql.replaceAll('`', '\\`') + '`;'
+              sql = eval('(function() {\n' + code + '\n})()')
               var json = {
                 sql: sql,
-                arg: arg
+                args: args  // Object.values(header)
               }
+
               callback(randomNameKeys.join(', '), constConfigLines.join('\n'), json);
             }
             continue;
@@ -5830,7 +5923,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
                 //替换 JSON 里的键值对 key: value
                 code += 'var ' + key + ' = ' + (isSingle ? (typeof configVal == 'string' ? '"' + configVal + '"' : configVal) : "'?'") + ';\n';
                 if (isSingle != true) {
-                  arg.push(val);
+                  args.push(val);
                 }
               // }
             }
@@ -5844,7 +5937,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
               sql = eval('(function() {\n' + code + '\n})()')
               var json = {
                 sql: sql,
-                arg: arg  // Object.values(header)
+                args: args  // Object.values(header)
               }
 
               callback(randomNameKeys.join(', '), constConfigLines.join('\n'), json);
@@ -6300,7 +6393,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
           var standard = StringUtil.isEmpty(tr[standardKey], true) ? null : JSON.parse(tr[standardKey])
 
           var rsp = JSON.parse(JSON.stringify(this.removeDebugInfo(response) || {}))
-          rsp = JSONResponse.array2object(rsp, 'arg', ['arg'], true)
+          rsp = JSONResponse.array2object(rsp, 'args', ['args'], true)
 
           tr.compare = JSONResponse.compareResponse(standard, rsp, '', this.isMLEnabled, null, [], ignoreTrend) || {}
           tr.compare.duration = it.durationHint
@@ -6896,7 +6989,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
               delete currentResponse.throw; //throw必须一致
 
               var rsp = JSON.parse(JSON.stringify(currentResponse || {}))
-              rsp = JSONResponse.array2object(rsp, 'arg', ['arg'], true)
+              rsp = JSONResponse.array2object(rsp, 'args', ['args'], true)
 
               var find = false;
               if (isCodeChange && hasCode) {  // 走异常分支
@@ -7379,13 +7472,13 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
             vInput.value = StringUtil.trim(rawReq.json)
           }
 
-          if (StringUtil.isEmpty(rawReq.header, true) == false) {
+          if (rawReq.header != null) { // StringUtil.isEmpty(rawReq.header, true) == false) {
             hasTestArg = true
             vHeader.value = StringUtil.trim(rawReq.header, true)
             App.isHeaderShow = true
           }
 
-          if (StringUtil.isEmpty(rawReq.random, true) == false) {
+          if (rawReq.random != null) { // StringUtil.isEmpty(rawReq.random, true) == false) {
             hasTestArg = true
             vRandom.value = StringUtil.trim(rawReq.random, true)
             App.isRandomShow = true
@@ -7453,7 +7546,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
           if (event.keyCode === 73) {  // Ctrl + 'I'  格式化
             try {
               if (target == vInput) {
-                var json = JSON.stringify(JSON5.parse(vInput.value), null, '    ');
+                var json = vInput.value // JSON.stringify(JSON5.parse(vInput.value), null, '    ');
                 vInput.value = inputted = isSingle ? App.switchQuote(json) : json;
               }
               else {
@@ -7466,7 +7559,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
                    continue;
                   }
 
-                  var ind = l.lastIndexOf('  //');
+                  var ind = l.lastIndexOf(' //');
                   l = ind < 0 ? l : StringUtil.trim(l.substring(0, ind));
 
                   if (target == vHeader || target == vRandom) {
@@ -7504,26 +7597,32 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
 
               var newStr = json.substring(0, start);
 
+              var commentSign = target == vInput ? '#' : '//'
+              var commentSignLen = commentSign.length
+
               for (var i = 0; i < lines.length; i ++) {
                 var l = lines[i] || '';
                 if (i > 0) {
                   newStr += '\n';
                 }
 
-                if (StringUtil.trim(l).startsWith('//')) {
-                  var ind = l.indexOf('//');
-                  var suffix = l.substring(ind + 2);
-                  if (suffix.startsWith('  ')) {
-                    suffix = suffix.substring(2);
-                    selectionEnd -= 2;
+                if (StringUtil.trim(l).startsWith(commentSign)) {
+                  var ind = l.indexOf(commentSign);
+                  var suffix = l.substring(ind + commentSignLen);
+                  if (suffix.startsWith(' ')) {
+                    suffix = suffix.substring(1);
+                    selectionStart -= 1;
+                    selectionEnd -= 1;
                   }
 
                   newStr += StringUtil.get(l.substring(0, ind)) + StringUtil.get(suffix)
-                  selectionEnd -= 2;
+                  selectionStart -= commentSignLen;
+                  selectionEnd -= commentSignLen;
                 }
                 else {
-                  newStr += '//  ' + l;
-                  selectionEnd += 4;
+                  newStr += commentSign + ' ' + l;
+                  selectionStart += commentSignLen + 1;
+                  selectionEnd += commentSignLen + 1;
                 }
               }
 

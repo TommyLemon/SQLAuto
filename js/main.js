@@ -4170,12 +4170,18 @@
                   var firstItem = list[0];
                   var first = true
                   for (var k in firstItem) {
-                    h += (first ? '' : '  |  ') + App.toMD(k)
-                    d += (first ? '' : '  |  ') + '--------'
+                    h += '  |  ' + App.toMD(k)
+                    d += '  |  ' + '--------'
                     first = false
                   }
 
-                  var md = '<h3 style="color: dodgerblue" onclick="window.App._data.view=\'code\'"><- ' + len + ' results:</h3>\n\n' + h + '\n' + d
+                  var debugTime = App.parseDebugTime(data, App.currentRemoteItem.TestRecord) || {}
+
+                  var md = '<h3 style="color: dodgerblue" onclick="window.App._data.view=\'code\'"><- '
+                    + len + ' results' + (debugTime.duration == null ? '' : ', ' + App.getDurationShowString(debugTime.duration)
+                    + (StringUtil.isEmpty(debugTime.durationHint, true) ? '' : ', ' + debugTime.durationHint))
+                    + ':</h3>\n\n' + h + '\n' + d
+
                   for (var i = 0; i < len; i++) {
                     var item = list[i];
                     if (item == null) {
@@ -4183,11 +4189,9 @@
                     }
 
                     md += '\n'
-                    var first = true
                     for (var k in item) {
                       var v = item[k]
-                      md += (first ? '' : '  |  ') + App.toMD(v)  // (v == null ? '&lt;a style="color:red"&gt;&lt;NULL&gt;&lt;/a&gt;' : App.toMD(v))
-                      first = false
+                      md +=  '  |  ' + App.toMD(v)  // (v == null ? '&lt;a style="color:red"&gt;&lt;NULL&gt;&lt;/a&gt;' : App.toMD(v))
                     }
                   }
 
@@ -6429,28 +6433,31 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
 
       },
 
-      compareResponse: function (allCount, list, index, item, response, isRandom, accountIndex, justRecoverTest, err, ignoreTrend, isCross, callback) {
-        var it = item || {} //请求异步
-        var d = (isRandom ? this.currentRemoteItem.Document : it.Document) || {} //请求异步
-        var r = isRandom ? it.Random : null //请求异步
-        var tr = it.TestRecord || {} //请求异步
+      getDurationShowString: function (duration) {
+        if (duration == null) {
+          duration = 0
+        }
+        return duration <= 0 ? '' : (duration < 1000 ? duration + 'ms' : (duration < 1000*60 ? (duration/1000).toFixed(1) + 's' : (duration <= 1000*60*60 ? (duration/1000/60).toFixed(1) + 'm' : '>1h')))
+      },
 
-        var bdt = tr.duration || 0
-        it.durationBeforeShowStr = bdt <= 0 ? '' : (bdt < 1000 ? bdt + 'ms' : (bdt < 1000*60 ? (bdt/1000).toFixed(1) + 's' : (bdt <= 1000*60*60 ? (bdt/1000/60).toFixed(1) + 'm' : '>1h')))
+      parseDebugTime: function (response, testRecord) {
+        var it = {}
         try {
-          var durationInfo = response == null ? null : response['time:start|duration|end|parse|sql']
-          it.durationInfo = durationInfo
-          if (durationInfo == null) {
+          var timeInfoStr = response == null ? null : response['time:start|duration|end|parse|sql']
+          it.durationInfo = timeInfoStr
+          if (timeInfoStr == null) {
             throw new Error("response['time:start|duration|end|parse|sql'] is null!");
           }
 
-          var di = durationInfo.substring(durationInfo.indexOf('\|') + 1)
+          testRecord = testRecord || {}
+
+          var di = timeInfoStr.substring(timeInfoStr.indexOf('\|') + 1)
           it.duration = di.substring(0, di.indexOf('\|') || di.length) || 0
           var dt = + it.duration
           it.duration = dt
-          it.durationShowStr = dt <= 0 ? '' : (dt < 1000 ? dt + 'ms' : (dt < 1000*60 ? (dt/1000).toFixed(1) + 's' : (dt <= 1000*60*60 ? (dt/1000/60).toFixed(1) + 'm' : '>1h')))
-          var min = tr.minDuration == null || tr.minDuration <= 0 ? 20 : tr.minDuration
-          var max = tr.maxDuration == null || tr.maxDuration <= 0 ? 200 : tr.maxDuration
+          it.durationShowStr = this.getDurationShowString(dt)
+          var min = testRecord.minDuration == null || testRecord.minDuration <= 0 ? 20 : testRecord.minDuration
+          var max = testRecord.maxDuration == null || testRecord.maxDuration <= 0 ? 200 : testRecord.maxDuration
           it.durationColor = dt < min ? 'green' : (dt > 2*max ? 'red' : (dt > max + min ? 'orange' : (dt > max ? 'blue' : 'black')))
           it.durationHint = dt < min ? '很快：比以往 [' + min + 'ms, ' + max + 'ms] 最快还更快' : (dt > 2*max ? '非常慢：比以往 [' + min + 'ms, ' + max + 'ms] 最慢的两倍还更慢'
             : (dt > max + min ? '比较慢：比以往 [' + min + 'ms, ' + max + 'ms] 最快与最慢之和(平均值两倍)还更慢'
@@ -6461,6 +6468,19 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
           it.durationShowStr = it.durationShowStr || it.duration
           it.durationHint = it.durationHint || '最外层缺少字段 "time:start|duration|end|parse|sql"，无法对比耗时'
         }
+        return it
+      },
+
+      compareResponse: function (allCount, list, index, item, response, isRandom, accountIndex, justRecoverTest, err, ignoreTrend, isCross, callback) {
+        var it = item || {} //请求异步
+        var d = (isRandom ? this.currentRemoteItem.Document : it.Document) || {} //请求异步
+        var r = isRandom ? it.Random : null //请求异步
+        var tr = it.TestRecord || {} //请求异步
+
+        var bdt = tr.duration || 0
+        it.durationBeforeShowStr = this.getDurationShowString(bdt)
+        var timeInfo = this.parseDebugTime(response, tr)
+        it = Object.assign(it, timeInfo)
 
         if (err != null) {
           tr.compare = {

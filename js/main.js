@@ -4137,7 +4137,48 @@
             })
 
             App.setBaseUrl()
-            App.request(isAdminOperation, App.type, App.server + "/sql/execute", req, isAdminOperation ? {} : header, callback)
+            App.request(isAdminOperation, App.type, App.server + "/sql/execute", req, isAdminOperation ? {} : header, callback || function (url, res, err) {
+              App.onResponse(url, res, err)
+              setTimeout(function () {
+                var data = App.isRandomTest || App.isTestCaseShow || (App.randomAllCount > 0 && App.randomDoneCount < App.randomAllCount) ? null : res.data
+                var list = JSONResponse.isSuccess(data) ? data.list : null
+                var len = list == null ? 0 : list.length
+                if (len > 0) {
+                  var h = ''
+                  var d = ''
+                  var firstItem = list[0];
+                  var first = true
+                  for (var k in firstItem) {
+                    h += (first ? '' : '  |  ') + App.toMD(k)
+                    d += (first ? '' : '  |  ') + '--------'
+                    first = false
+                  }
+
+                  var md = '### ' + len + ' results:\n\n' + h + '\n' + d
+                  for (var i = 0; i < len; i++) {
+                    var item = list[i];
+                    if (item == null) {
+                      continue;
+                    }
+
+                    md += '\n'
+                    var first = true
+                    for (var k in item) {
+                      var v = item[k]
+                      md += (first ? '' : '  |  ') + (v == null ? '<NULL>' : App.toMD(v))
+                      first = false
+                    }
+                  }
+
+                  md += '\n\n```json\n'
+                  + JSON.stringify(data, null, '    ')
+                  + '\n```'
+
+                  App.view = 'markdown'
+                  markdownToHTML(md)
+                }
+              }, 1000)
+            })
 
             App.locals = App.locals || []
             if (App.locals.length >= 1000) { //最多1000条，太多会很卡
@@ -5308,15 +5349,21 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
        */
       toMD: function (s) {
         if (s == null) {
-          s = '';
-        }
-        else {
-          //无效
-          s = s.replace(/\|/g, '\|');
-          s = s.replace(/\n/g, ' <br /> ');
-          // s = s.replace(/ /g, '&ensp;');
+          return ''
         }
 
+        if (s instanceof Object) {
+          s = JSON.stringify(s)
+        }
+
+        if (typeof s != 'string') {
+          return new String(s)
+        }
+
+        //无效
+        s = s.replace(/\|/g, '\|');
+        s = s.replace(/\n/g, ' <br /> ');
+        // s = s.replace(/ /g, '&ensp;');
         return s;
       },
 

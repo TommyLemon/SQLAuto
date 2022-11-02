@@ -2818,6 +2818,30 @@
         }
       },
 
+      generateValue: function (t, n, isSQL) {
+        if (t == 'boolean') {
+          return true
+        }
+        if (t == 'integer') {
+          return n == 'pageSize' ? 10 : 1
+        }
+        if (t == 'string') {  // TODO
+          return ''
+        }
+        if (t == 'object') {
+          return {}
+        }
+        if (t == 'array') {
+          return []
+        }
+        var suffix = n != null && n.length >= 3 ? n.substring(n.length - 3).toLowerCase() : null
+        if (suffix == 'dto') {
+          return {}
+        }
+
+        return null
+      },
+
       //上传第三方平台的 API 至 SQLAuto
       uploadThirdPartyApi: function(type, name, url, parameters, header, description, creator) {
         var req = '{'
@@ -2830,29 +2854,7 @@
             var val = paraItem.default
 
             if (val == undefined) {
-              if (t == 'boolean') {
-                val = 'true'
-              }
-              if (t == 'integer') {
-                val = n == 'pageSize' ? '10' : '1'
-              }
-              else if (t == 'string') {
-                val = '""'
-              }
-              else if (t == 'object') {
-                val = '{}'
-              }
-              else if (t == 'array') {
-                val = '[]'
-              }
-              else {
-                var suffix = n.length >= 3 ? n.substring(n.length - 3).toLowerCase() : null
-                if (suffix == 'dto') {
-                  val = '{}'
-                } else {
-                  val = 'null'
-                }
-              }
+              val = this.generateValue(t, n)
             }
             else if (typeof val == 'string' && (StringUtil.isEmpty(t, true) || t == 'string')) {
               val = '"' + val.replace(/"/g, '\\"') + '"'
@@ -4022,6 +4024,13 @@
         // // 删除注释 >>>>>>>>>>>>>>>>>>>>>
 
         this.onChange(false);
+
+        // var list = docObj == null ? null : docObj['[]'];
+        // if (list != null && list.length > 0) {
+        //   this.onDocumentListResponse('', {data: docObj}, null, function (d) {
+        //     App.setDoc(d);
+        //   });
+        // }
       },
 
       /**获取显示的请求类型名称
@@ -4177,10 +4186,10 @@
 
                   var debugTime = App.parseDebugTime(data, App.currentRemoteItem.TestRecord) || {}
 
-                  var md = '<h3 style="color: dodgerblue" onclick="window.App._data.view=\'code\'"><- '
+                  var md = '<a href="javascript:void(0)" onclick="window.App._data.view=\'code\'"><- '
                     + len + ' results' + (debugTime.duration == null ? '' : ', ' + App.getDurationShowString(debugTime.duration)
                     + (StringUtil.isEmpty(debugTime.durationHint, true) ? '' : ', ' + debugTime.durationHint))
-                    + ':</h3>\n\n' + h + '\n' + d
+                    + ':</a>\n\n' + h + '\n' + d
 
                   for (var i = 0; i < len; i++) {
                     var item = list[i];
@@ -4470,7 +4479,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
                   continue;
                 }
 
-                var ind = l.lastIndexOf('  //');
+                var ind = l.lastIndexOf(' //');
                 l = ind < 0 ? l : StringUtil.trim(l.substring(0, ind));
 
                 ind = l.indexOf(':');
@@ -5042,7 +5051,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
             },
             "join": isNotTSQL ? null : {
             	"&/AllTableComment": {
-            		'table_name$': search,
+            		  'table_name$': search,
               		'table_comment$': search,
               		'@combine': search == null ? null : 'table_name$,table_comment$',
             	}
@@ -5061,11 +5070,12 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
               'count': 0,
               'Column': isTSQL ? null : {
                 'table_schema{}': schemas,
+                'table_schema@': schemas != null && schemas.length == 1 ? null : '[]/Table/table_schema',
                 'table_name@': this.database != 'SQLSERVER' ? '[]/Table/table_name' : "[]/SysTable/table_name",
                 "@order": this.database != 'SQLSERVER' ? null : "table_name+",
                 '@column': this.database == 'POSTGRESQL' || this.database == 'SQLSERVER'  //MySQL 8 SELECT `column_name` 返回的仍然是大写的 COLUMN_NAME，需要 AS 一下
                   ? 'column_name;data_type;numeric_precision,numeric_scale,character_maximum_length'
-                  : 'column_name:column_name,column_type:column_type,is_nullable:is_nullable,column_comment:column_comment'
+                  : 'column_name:column_name,column_type:column_type,is_nullable:is_nullable,column_default:column_default,column_comment:column_comment'
               },
               'PgAttribute': this.database != 'POSTGRESQL' ? null : {
                 'attrelid@': '[]/PgClass/oid',
@@ -5097,11 +5107,18 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
             }
           }
         }, {}, function (url, res, err) {
-          if (err != null || res == null || res.data == null) {
-            log('getDoc  err != null || res == null || res.data == null >> return;');
+          App.onDocumentListResponse(url, res, err, callback)
+        })
+      },
+
+      onDocumentListResponse: function(url, res, err, callback) {
+        if (err != null || res == null || res.data == null) {
+          log('getDoc  err != null || res == null || res.data == null >> return;');
+          if (callback != null) {
             callback('')
-            return;
           }
+          return;
+        }
 
 //        log('getDoc  docRq.responseText = \n' + docRq.responseText);
           docObj = res.data || {};  //避免后面又调用 onChange ，onChange 又调用 getDoc 导致死循环
@@ -5143,43 +5160,20 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
               // item.Table.table_comment = table_comment
 
               var schema = table.table_schema
+              var tableName = table.table_name
+              var argStr = i + ",'" + tableName + "'" + (StringUtil.isEmpty(schema, true) ? '' : ",'" + schema + "'")
 
               doc += '\n### ' + (i + 1) + '. ' + (StringUtil.isEmpty(schema, true) ? '' : schema + '.')
-                + StringUtil.get(table.table_name)
-                + '  - [INSERT](' + App.getShareLink(false,
-                encodeURIComponent('INSERT INTO ' + table.table_name
-                + '\n# ('
-                + '\n# )'  // + '\n# %29'
-                + '\nVALUES('
-                // + '\n# TODO '
-                + '\n)').replaceAll(')', '%29')
-                  , StringUtil.isEmpty(schema, true) ? null : App.getBaseUrl() + '/' + schema, null, '', '') + ') '
-                + '[SELECT](' + App.getShareLink(false,
-                encodeURIComponent('SELECT * FROM ' + table.table_name
-                + '\n# WHERE id = 1 AND userId > 0'
-                + '\n# GROUP BY userId'
-                + '\n# HAVING avg(id)>10'
-                + '\n# ORDER BY id DESC'
-                + '\nLIMIT 10'
-                + '\n# OFFSET 10').replaceAll(')', '%29')
-                  , StringUtil.isEmpty(schema, true) ? null : App.getBaseUrl() + '/' + schema, null, '', '') + ') '
-                + '[UPDATE](' + App.getShareLink(false,
-                encodeURIComponent('UPDATE ' + table.table_name
-                + '\nSET userId = 2 '
-                + '\nWHERE id = 1 AND userId = 1'
-                + '\n# LIMIT 1').replaceAll(')', '%29')
-                  , StringUtil.isEmpty(schema, true) ? null : App.getBaseUrl() + '/' + schema, null, '', '') + ') '
-                + '[DELETE](' + App.getShareLink(false,
-                encodeURIComponent('DELETE FROM ' + table.table_name
-                + '\nWHERE id = 1 AND userId = 1'
-                + '\n# LIMIT 1').replaceAll(')', '%29')
-                  , StringUtil.isEmpty(schema, true) ? null : App.getBaseUrl() + '/' + schema, null, '', '') + ') '
+                + StringUtil.get(tableName)
+                + ' - <a href="javascript:void(0)" onclick="window.App.onClickGet(' + argStr + ')">SELECT</a>'
+                + ' <a href="javascript:void(0)" onclick="window.App.onClickPost(' + argStr + ')">INSERT</a>'
+                + ' <a href="javascript:void(0)" onclick="window.App.onClickPut(' + argStr + ')">UPDATE</a>'
+                + ' <a href="javascript:void(0)" onclick="window.App.onClickDelete(' + argStr + ')">DELETE</a>'
                 + '\n' + App.toMD(table_comment);
 
-
               //Column[]
-              doc += '\n\n 名称  |  类型  |  最大长度  |  详细说明' +
-                ' \n --------  |  ------------  |  ------------  |  ------------ ';
+              doc += '\n\n 名称  |  类型  |  最大长度  |  默认值  |  详细说明' +
+                ' \n --------  |  ------------  |  ------------  |  ------------  |  ------------ ';
 
               columnList = item['[]'];
               if (columnList == null) {
@@ -5193,7 +5187,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
               var type;
               var length;
               for (var j = 0; j < columnList.length; j++) {
-                column = (columnList[j] || {}).Column;
+                column = (columnList[j] || {})[App.database != 'SQLSERVER' ? 'Column' : 'SysColumn'];
                 name = column == null ? null : column.column_name;
                 if (name == null) {
                   continue;
@@ -5214,9 +5208,11 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
                       : column
                   );
                 var column_comment = (o || {}).column_comment
+                var column_default = column.column_default
 
                 // column.column_comment = column_comment
-                doc += '\n' + name + '  |  ' + type.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '  |  ' + length + '  |  ' + App.toMD(column_comment);
+                doc += '\n' + name + '  |  ' + type.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                  + '  |  ' + length + '  |  ' + (column_default == null ? 'NULL' : column_default) + '  |  ' + App.toMD(column_comment);
 
               }
 
@@ -5330,12 +5326,216 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
 
           App.onChange(false);
 
-
-          callback(doc);
+          if (callback != null) {
+            callback(doc);
+          }
 
 //      log('getDoc  callback(doc); = \n' + doc);
-        });
+      },
 
+      getTableKey(database) {
+        database = database || this.database
+        return this.database == 'SQLSERVER' ? 'SysTable' : (['ORALCE', 'DAMENG'].indexOf(database) >= 0 ? 'AllTable' : 'Table')
+      },
+      getColumnKey(database) {
+        database = database || this.database
+        return this.database == 'SQLSERVER' ? 'SysColumn' : (['ORALCE', 'DAMENG'].indexOf(database) >= 0 ? 'AllColumn' : 'Column')
+      },
+      getTableObj(tableIndex) {
+        var list = docObj == null ? null : docObj['[]']
+        var item = list == null ? null : list[tableIndex]
+        return item == null ? null : item[this.getTableKey()];
+      },
+      getColumnList(tableIndex) {
+        var list = docObj == null ? null : docObj['[]']
+        var item = list == null ? null : list[tableIndex]
+        return item == null ? null : item['[]']
+      },
+      getColumnObj(columnList, columnIndex) {
+        return columnList == null ? null : (columnList[columnIndex] || {})[this.getColumnKey()];
+      },
+      getTableName(tableIndex) {
+        var table = this.getTableObj(tableIndex)
+        return table == null ? '' : table.table_name
+      },
+      getSchemaName(tableIndex) {
+        var table = this.getTableObj(tableIndex)
+        var sch = table == null ? null : table.table_shema
+        if (StringUtil.isNotEmpty(sch)) {
+          return sch
+        }
+
+        var schemas = StringUtil.isEmpty(this.schema, true) ? null : StringUtil.split(this.schema)
+        return schemas == null || schemas.length != 1 ? null : this.schema
+      },
+
+      onClickPost: function (tableIndex, tableName, schemaName) {
+        tableName = tableName || this.getTableName(tableIndex)
+
+        var s = 'INSERT INTO ' + (isSingle ? tableName : '`' + tableName + '`') + '\n  ('
+        var v = '\nVALUES('
+
+        var columnList = this.getColumnList(tableIndex)
+        if (columnList != null && columnList.length > 0) {
+          for (var j = 0; j < columnList.length; j++) {
+            var column = this.getColumnObj(columnList, j)
+            var name = column == null ? null : column.column_name;
+            if (name == null) {
+              continue;
+            }
+
+            s += (j <= 0 ? '' : ', ') + (isSingle ? name : '`' + name + '`')
+
+            var val = column.column_default
+            if (val == null) {
+              var column_type = CodeUtil.getColumnType(column, this.database);
+              var type = CodeUtil.getType4Language(CodeUtil.LANGUAGE_JAVA_SCRIPT, column_type, false);
+              val = this.generateValue(type, name, true)
+            }
+
+            if (val instanceof Object) {
+              val = JSON.stringify(val)
+            }
+
+            var isStr = typeof val == 'string'
+            v += (j <= 0 ? '\n  ' : ',\n  ') + (val == null ? 'NULL' : (isStr ? "'" + val.replaceAll("'", "\\'") + "'" : val))
+          }
+        }
+
+        v += '\n)'
+        s += ')' + v
+
+        this.showCRUD(tableIndex, tableName, schemaName, s)
+      },
+
+      onClickGet: function (tableIndex, tableName, schemaName) {
+        tableName = tableName || this.getTableName(tableIndex)
+        var s = 'SELECT '
+        var v = '\nWHERE ('
+
+        var columnList = this.getColumnList(tableIndex)
+        if (columnList != null && columnList.length > 0) {
+          for (var j = 0; j < columnList.length; j++) {
+            var column = this.getColumnObj(columnList, j)
+            var name = column == null ? null : column.column_name;
+            if (name == null) {
+              continue;
+            }
+
+            s += (j <= 0 ? '' : ', ') + (isSingle ? name : '`' + name + '`')
+
+            var val = column.column_default
+            if (val == null) {
+              var column_type = CodeUtil.getColumnType(column, this.database);
+              var type = CodeUtil.getType4Language(CodeUtil.LANGUAGE_JAVA_SCRIPT, column_type, false);
+              val = this.generateValue(type, name, true)
+            }
+
+            if (val instanceof Object) {
+              val = JSON.stringify(val)
+            }
+
+            var isStr = typeof val == 'string'
+            v += (j <= 0 ? '\n  ' : '\n  AND ') + (isSingle ? name : '`' + name + '`') + (val == null ? ' IS NULL ' : ' = ' + (isStr ? "'" + val.replaceAll("'", "\\'") + "'" : val))
+          }
+        }
+
+        v += '\n)'
+        s += '\nFROM ' + (isSingle ? tableName : '`' + tableName + '`') + v
+          + '\n# GROUP BY userId'
+          + '\n# HAVING avg(id)>10'
+          + '\n# ORDER BY id DESC'
+          + '\nLIMIT 100'
+          + '\n# OFFSET 10'
+
+        this.showCRUD(tableIndex, tableName, schemaName, s)
+      },
+
+      onClickPut: function (tableIndex, tableName, schemaName) {
+        tableName = tableName || this.getTableName(tableIndex)
+
+        var s = 'UPDATE ' + (isSingle ? tableName : '`' + tableName + '`') + '\nSET '
+        var v = '\nWHERE ('
+
+        var columnList = this.getColumnList(tableIndex)
+        if (columnList != null && columnList.length > 0) {
+          for (var j = 0; j < columnList.length; j++) {
+            var column = this.getColumnObj(columnList, j)
+            var name = column == null ? null : column.column_name;
+            if (name == null) {
+              continue;
+            }
+
+            var val = column.column_default
+            if (val == null) {
+              var column_type = CodeUtil.getColumnType(column, this.database);
+              var type = CodeUtil.getType4Language(CodeUtil.LANGUAGE_JAVA_SCRIPT, column_type, false);
+              val = this.generateValue(type, name, true)
+            }
+
+            if (val instanceof Object) {
+              val = JSON.stringify(val)
+            }
+
+            var isStr = typeof val == 'string'
+            var valStr = (val == null ? 'NULL' : (isStr ? "'" + val.replaceAll("'", "\\'") + "'" : val))
+
+            s += (j <= 0 ? '\n  ' : ',\n  ') + (isSingle ? name : '`' + name + '`') + ' = ' + valStr
+            v += (j <= 0 ? '\n  ' : '\n  AND ') + (isSingle ? name : '`' + name + '`') + (val == null ? ' IS NULL ' : ' = ' + valStr)
+          }
+        }
+
+        v += '\n)'
+        s += v + '\n# LIMIT 1'
+
+        this.showCRUD(tableIndex, tableName, schemaName, s)
+      },
+
+      onClickDelete: function (tableIndex, tableName, schemaName) {
+        tableName = tableName || this.getTableName(tableIndex)
+
+        var s = 'DELETE FROM ' + (isSingle ? tableName : '`' + tableName + '`')
+        var v = '\nWHERE ('
+
+        var columnList = this.getColumnList(tableIndex)
+        if (columnList != null && columnList.length > 0) {
+          for (var j = 0; j < columnList.length; j++) {
+            var column = this.getColumnObj(columnList, j)
+            var name = column == null ? null : column.column_name;
+            if (name == null) {
+              continue;
+            }
+
+            var val = column.column_default
+            if (val == null) {
+              var column_type = CodeUtil.getColumnType(column, this.database);
+              var type = CodeUtil.getType4Language(CodeUtil.LANGUAGE_JAVA_SCRIPT, column_type, false);
+              val = this.generateValue(type, name, true)
+            }
+
+            if (val instanceof Object) {
+              val = JSON.stringify(val)
+            }
+
+            var isStr = typeof val == 'string'
+            v += (j <= 0 ? '\n  ' : '\n  AND ') + (isSingle ? name : '`' + name + '`') + (val == null ? ' IS NULL ' : ' = ' + (isStr ? "'" + val.replaceAll("'", "\\'") + "'" : val))
+          }
+        }
+
+        v += '\n)'
+        s += v + '\n# LIMIT 1'
+
+        this.showCRUD(tableIndex, tableName, schemaName, s)
+      },
+
+      showCRUD: function (tableIndex, tableName, schemaName, sql) {
+        schemaName = schemaName || this.getSchemaName(tableIndex)
+
+        this.type = REQUEST_TYPE_JSON
+        this.showUrl(false, StringUtil.isEmpty(schemaName) ? '' : '/' + schemaName)
+        this.urlComment = ''
+        vInput.value = StringUtil.trim(sql)
+        this.onChange(false)
       },
 
       // toDoubleJSON: function (json, defaultValue) {
@@ -5908,7 +6108,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
           const lineItem = lines[i] || '';
 
           // remove comment   // 解决整体 trim 后第一行  // 被当成正常的 key 路径而不是注释
-          const commentIndex = StringUtil.trim(lineItem).startsWith('//') ? 0 : lineItem.lastIndexOf('  //'); //  -1; // eval 本身支持注释 eval('1 // test') = 1 lineItem.indexOf('  //');
+          const commentIndex = StringUtil.trim(lineItem).startsWith('//') ? 0 : lineItem.lastIndexOf(' //'); //  -1; // eval 本身支持注释 eval('1 // test') = 1 lineItem.indexOf(' //');
           const line = commentIndex < 0 ? lineItem : lineItem.substring(0, commentIndex).trim();
 
           if (line.length <= 0) {

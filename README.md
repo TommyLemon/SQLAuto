@@ -2,7 +2,7 @@
   SQLAuto
 </h1>
  
-<p align="center">☔ 智能零代码测试 SQL、任意增删改查、任意 SQL 模板变量、一键批量生成</p>
+<p align="center">☔ 智能零代码测试 SQL、任意增删改查、任意 SQL 模板变量、一键批量生成参数组合、快速构造大量测试数据</p>
 
 <p align="center" >
   <a href="https://github.com/TommyLemon/SQLAuto#%E9%83%A8%E7%BD%B2%E6%96%B9%E6%B3%95">使用文档</a>

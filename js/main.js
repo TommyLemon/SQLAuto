@@ -1878,7 +1878,7 @@
           const currentAccountId = this.getCurrentAccountId()
           const currentResponse = this.view != 'code' || StringUtil.isEmpty(this.jsoncon, true) ? {} : this.removeDebugInfo(JSON.parse(this.jsoncon));
 
-          const after = isSingle ? this.switchQuote(inputted) : inputted;  // this.toDoubleJSON(inputted);
+          const after = inputted // isSingle ? this.switchQuote(inputted) : inputted;  // this.toDoubleJSON(inputted);
           const inputObj = this.getRequest(after, {});
 
           var commentObj = null;
@@ -3812,7 +3812,7 @@
             before = StringUtil.trim(before); // this.toDoubleJSON(StringUtil.trim(before));
             log('onHandle  before = \n' + before);
 
-            var json = isSingle ? this.switchQuote(before) : before;
+            var json = before // isSingle ? this.switchQuote(before) : before;
             var arg = {}
             try {
               afterObj = {
@@ -3823,7 +3823,7 @@
               //FIXME 用前端的 SQL Parser 库
               // afterObj = jsonlint.parse(json);
               // after = JSON.stringify(afterObj, null, "    ");
-              before = isSingle ? this.switchQuote(after) : after;
+              before = after // isSingle ? this.switchQuote(after) : after;
             }
             catch (e) {
               log('main.onHandle', 'try { return jsonlint.parse(before); \n } catch (e) {\n' + e.message)
@@ -4010,7 +4010,7 @@
       transfer: function () {
         isSingle = ! isSingle;
 
-        vInput.value = this.switchQuote(vInput.value);
+        // vInput.value = this.switchQuote(vInput.value);
 
         this.isTestCaseShow = false
 
@@ -5212,7 +5212,8 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
 
                 // column.column_comment = column_comment
                 doc += '\n' + name + '  |  ' + type.replace(/</g, '&lt;').replace(/>/g, '&gt;')
-                  + '  |  ' + length + '  |  ' + (column_default == null ? 'NULL' : column_default) + '  |  ' + App.toMD(column_comment);
+                  // + '  |  ' + length + '  |  ' + (column_default == null ? 'NULL' : column_default) + '  |  ' + App.toMD(column_comment);
+                  + '  |  ' + length + '  |  ' + (column_default == null ? '' : column_default) + '  |  ' + App.toMD(column_comment);
 
               }
 
@@ -5535,6 +5536,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
         this.showUrl(false, StringUtil.isEmpty(schemaName) ? '' : '/' + schemaName)
         this.urlComment = ''
         vInput.value = StringUtil.trim(sql)
+        vHeader.value = ''  // TODO 生成完整的，不过都用注释形式
         this.onChange(false)
       },
 
@@ -7848,7 +7850,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
             try {
               if (target == vInput) {
                 var json = vInput.value // JSON.stringify(JSON5.parse(vInput.value), null, '    ');
-                vInput.value = inputted = isSingle ? App.switchQuote(json) : json;
+                vInput.value = inputted = json // isSingle ? App.switchQuote(json) : json;
               }
               else {
                 var lines = StringUtil.split(target.value, '\n');

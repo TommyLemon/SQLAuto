@@ -51,6 +51,39 @@ name: 'Test ' + new Date().toLocaleTimeString()  // 通过代码自定义
 DemoSQLConfig 改下 getDBAccount, getDBUri 等返回值，具体见 <br /> 
 https://github.com/APIJSON/APIJSON-Demo/tree/master/APIJSON-Java-Server
 
+### 后台 Headless 无 UI 模式回归测试
+![image](https://user-images.githubusercontent.com/5738175/199445916-29ac8ded-8838-46d8-88ff-0daad06b11a9.png)
+![image](https://user-images.githubusercontent.com/5738175/199445960-2eac952e-75d9-48b1-945b-5759370c21c0.png)
+
+#### 1.配置 Node 环境及 NPM 包管理工具
+https://nodejs.org
+
+#### 2.安装相关依赖
+https://koajs.com
+```sh
+nvm install 7
+npm i koa
+```
+
+#### 3.使用后台 HTTP 服务
+先启动 HTTP 服务
+```sh
+cd js
+node server.js
+```
+如果运行报错 missing package xxx，说明缺少相关依赖，参考步骤 2 来执行
+```sh
+npm i xxx
+```
+然后再启动 HTTP 服务。<br />
+
+启动成功后会有提示，点击链接或者复制到浏览器输入框打开即可。<br /><br />
+如果托管服务是用 [APIJSONBoot-MultiDataSource](https://github.com/APIJSON/APIJSON-Demo/tree/master/APIJSON-Java-Server/APIJSONBoot-MultiDataSource) 部署的，<br />
+链接 host 后可以加上 /sql，例如 http://localhost:3002/sql/test/start <br />
+通过这个接口来放宽前端执行时查询测试用例、参数配置等列表的条数，一次可批量执行更多用例。
+
+<br /><br />
+
 ### 常见问题
 
 **本网页工具基本每个按钮/输入框等 UI 组件都有注释或悬浮文档等形式的操作提示，<br />

@@ -52,8 +52,10 @@ DemoSQLConfig 改下 getDBAccount, getDBUri 等返回值，具体见 <br />
 https://github.com/APIJSON/APIJSON-Demo/tree/master/APIJSON-Java-Server
 
 ### 后台 Headless 无 UI 模式回归测试
-![image](https://user-images.githubusercontent.com/5738175/199445916-29ac8ded-8838-46d8-88ff-0daad06b11a9.png)
-![image](https://user-images.githubusercontent.com/5738175/199445960-2eac952e-75d9-48b1-945b-5759370c21c0.png)
+Jenkins、蓝盾 等 CI/CD 等流水线不支持带 UI 测试，所以提供了这个模式， <br />
+通过调用 HTTP API 即可执行用例和查看进度，方便集成到 CI/CD 流水线。
+![image](https://user-images.githubusercontent.com/5738175/199454264-b60de80d-ced0-4fbb-b531-366252697924.png)
+![image](https://user-images.githubusercontent.com/5738175/199454455-6ce807bd-e3a6-4664-baa2-8db96f6fa765.png)
 
 #### 1.配置 Node 环境及 NPM 包管理工具
 https://nodejs.org

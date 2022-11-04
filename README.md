@@ -114,7 +114,7 @@ https://github.com/TommyLemon/APIAuto/issues/12
 https://github.com/TommyLemon/APIAuto/issues/13
 
 更多常见问题 <br />
-https://github.com/TommyLemon/SQLAuto
+https://github.com/TommyLemon/APIAuto/issues
 
 <br />
 

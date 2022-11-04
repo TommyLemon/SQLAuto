@@ -128,7 +128,7 @@ https://github.com/TommyLemon/SQLAuto
 [https://github.com/TommyLemon](https://github.com/TommyLemon)<br />
 <img width="1279" alt="image" src="https://user-images.githubusercontent.com/5738175/189525500-5fe3ba45-c2b3-4df9-9607-c84120111e3c.png">
 
-如果有什么问题或建议可以 [提ISSUE](https://github.com/TommyLemon/SQLAuto/issues)，交流技术，分享经验。<br >
+如果有什么问题或建议可以 [提ISSUE](https://github.com/TommyLemon/APIAuto/issues)，交流技术，分享经验。<br >
 如果你解决了某些bug，或者新增了一些功能，欢迎 [贡献代码](https://github.com/TommyLemon/SQLAuto/pulls)，感激不尽。
 
 ### 其它项目

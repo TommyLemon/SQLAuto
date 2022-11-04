@@ -130,7 +130,7 @@ https://github.com/TommyLemon/SQLAuto
 
 ##### QQ群聊
 如果有什么问题或建议可以 [去 APIAuto 提 issue](https://github.com/TommyLemon/APIAuto/issues)，交流技术，分享经验。<br >
-如果你解决了某些bug，或者新增了一些功能，欢迎 [贡献代码](https://github.com/TommyLemon/UnitAuto/pulls)，感激不尽。
+如果你解决了某些bug，或者新增了一些功能，欢迎 [贡献代码](https://github.com/TommyLemon/SQLAuto/pulls)，感激不尽。
 <br />
 <br />
 

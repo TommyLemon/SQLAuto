@@ -2825,6 +2825,9 @@
         if (t == 'integer') {
           return n == 'pageSize' ? 10 : 1
         }
+        if (t == 'number') {
+          return n == 'pageSize' ? 10 : 1
+        }
         if (t == 'string') {  // TODO
           return ''
         }
@@ -5355,10 +5358,6 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
       getColumnObj(columnList, columnIndex) {
         return columnList == null ? null : (columnList[columnIndex] || {})[this.getColumnKey()];
       },
-      getTableName(tableIndex) {
-        var table = this.getTableObj(tableIndex)
-        return table == null ? '' : table.table_name
-      },
       getSchemaName(tableIndex) {
         var table = this.getTableObj(tableIndex)
         var sch = table == null ? null : table.table_shema
@@ -5368,6 +5367,14 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
 
         var schemas = StringUtil.isEmpty(this.schema, true) ? null : StringUtil.split(this.schema)
         return schemas == null || schemas.length != 1 ? null : this.schema
+      },
+      getTableName(tableIndex) {
+        var table = this.getTableObj(tableIndex)
+        return table == null ? '' : table.table_name
+      },
+      getColumnName(columnList, columnIndex) {
+        var column = this.getColumnObj(columnList, columnIndex)
+        return column == null ? '' : column.column_name
       },
 
       onClickPost: function (tableIndex, tableName, schemaName) {
@@ -7839,7 +7846,51 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
       document.addEventListener('keydown', function(event) {
         // alert(event.key) 小写字母 i 而不是 KeyI
         // if (event.ctrlKey && event.keyCode === 73) { // KeyI 无效  event.key === 'KeyI' && event.target == vInput){
-        if (event.ctrlKey || event.metaKey) {
+        var isEnter = event.keyCode === 13
+        var isDel = event.keyCode === 8 // 和网上的不一样 46
+        if (isEnter || isDel) { // enter || delete
+          var target = event.target
+          if (target == vUrl) {
+          }
+          else {
+            var selectionStart = target.selectionStart;
+            var selectionEnd = target.selectionEnd;
+
+            var text = StringUtil.get(target.value);
+            var before = text.substring(0, selectionStart);
+            var after = text.substring(selectionEnd);
+
+            var lastIndexOfNewline = before.lastIndexOf('\n')
+            var lastLineStart = lastIndexOfNewline + 1;
+            var lastLine = before.substring(lastLineStart);
+
+            var prefix = '';
+            for (var i = 0; i < lastLine.length; i++) {
+              if (lastLine.charAt(i) != ' ') {
+                if (isDel) {
+                  prefix = '';
+                }
+                break;
+              }
+
+              prefix += ' ';
+            }
+
+            if (prefix.length > 0) {
+              if (isEnter) {
+                target.value = before + '\n' + prefix + after.trimLeft();
+                target.selectionEnd = target.selectionStart = selectionStart + prefix.length;
+                event.preventDefault();
+              }
+              else if (isDel) {
+                target.value = (selectionStart == selectionEnd ? StringUtil.get(before.substring(0, lastIndexOfNewline) + ' ') : before) + after;
+                target.selectionEnd = target.selectionStart = selectionStart == selectionEnd ? lastIndexOfNewline : selectionStart;
+                event.preventDefault();
+              }
+            }
+          }
+        }
+        else if (event.ctrlKey || event.metaKey) {
           var target = event.target;
           var selectionStart = target.selectionStart;
           var selectionEnd = target.selectionEnd;
@@ -7848,57 +7899,53 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
 
           if (event.keyCode === 73) {  // Ctrl + 'I'  格式化
             try {
-              if (target == vInput) {
-                var json = vInput.value // JSON.stringify(JSON5.parse(vInput.value), null, '    ');
-                vInput.value = inputted = json // isSingle ? App.switchQuote(json) : json;
-              }
-              else {
-                var lines = StringUtil.split(target.value, '\n');
-                var newStr = '';
+              var isInput = target == vInput;
+              var commentChar = isInput ? '#' : '//';
+              var lines = StringUtil.split(target.value, '\n');
+              var newStr = '';
 
-                for (var i = 0; i < lines.length; i ++) {
-                  var l = StringUtil.trim(lines[i]) || '';
-                  if (l.startsWith('//')) {
-                   continue;
-                  }
+              for (var i = 0; i < lines.length; i ++) {
+                var l = StringUtil.trim(lines[i]) || '';
+                if (l.startsWith(commentChar)) {
+                  continue;
+                }
 
-                  var ind = l.lastIndexOf(' //');
-                  l = ind < 0 ? l : StringUtil.trim(l.substring(0, ind));
+                var ind = l.lastIndexOf(' ' + commentChar);
+                l = ind < 0 ? l : StringUtil.trim(l.substring(0, ind));
 
-                  if (target == vHeader || target == vRandom) {
-                    ind = l.indexOf(':');
-                    if (ind >= 0) {
-                      var left = target == vHeader ? StringUtil.trim(l.substring(0, ind)) : l.substring(0, ind);
-                      l = left + ': ' + StringUtil.trim(l.substring(ind + 1));
-                    }
-                  }
-
-                  if (l.length > 0) {
-                    newStr += '\n' + l;
+                if (target == vHeader || target == vRandom) {
+                  ind = l.indexOf(':');
+                  if (ind >= 0) {
+                    var left = target == vHeader ? StringUtil.trim(l.substring(0, ind)) : l.substring(0, ind);
+                    l = left + ': ' + StringUtil.trim(l.substring(ind + 1));
                   }
                 }
 
-                target.value = StringUtil.trim(newStr);
+                if (l.length > 0) {
+                  newStr += '\n' + l;
+                }
               }
+
+              target.value = StringUtil.trim(newStr);
             } catch (e) {
               log(e)
             }
           }
           else if (event.keyCode === 191) {  // Ctrl + '/' 注释与取消注释
             try {
-              var json = StringUtil.get(target.value);
-              var before = json.substring(0, selectionStart);
-              var after = json.substring(selectionEnd);
+              var text = StringUtil.get(target.value);
+              var before = text.substring(0, selectionStart);
+              var after = text.substring(selectionEnd);
 
               var ind = before.lastIndexOf('\n');
               var start = ind < 0 ? 0 : ind + 1;
               ind = after.indexOf('\n');
-              var end = ind < 0 ? json.length : selectionEnd + ind - 1;
+              var end = ind < 0 ? text.length : selectionEnd + ind - 1;
 
-              var selection = json.substring(start, end);
+              var selection = text.substring(start, end);
               var lines = StringUtil.split(selection, '\n');
 
-              var newStr = json.substring(0, start);
+              var newStr = text.substring(0, start);
 
               var commentSign = target == vInput ? '#' : '//'
               var commentSignLen = commentSign.length
@@ -7929,7 +7976,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
                 }
               }
 
-              newStr += json.substring(end);
+              newStr += text.substring(end);
 
               target.value = newStr;
               if (target == vInput) {

@@ -7847,7 +7847,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
         // alert(event.key) 小写字母 i 而不是 KeyI
         // if (event.ctrlKey && event.keyCode === 73) { // KeyI 无效  event.key === 'KeyI' && event.target == vInput){
         var isEnter = event.keyCode === 13
-        var isDel = event.keyCode === 8 // 和网上的不一样 46
+        var isDel = event.keyCode === 8 || event.keyCode === 46 // backspace 和 del
         if (isEnter || isDel) { // enter || delete
           var target = event.target
           if (target == vUrl) {

@@ -110,7 +110,7 @@ https://github.com/Tencent/APIJSON/issues/85
 https://github.com/TommyLemon/APIAuto/issues/12
 
 #### 4.apijson.cn 访问不了
-托管服务地址改为 http://47.74.39.68:8080  <br />
+托管服务地址改为 http://47.98.196.224:8080  <br />
 https://github.com/TommyLemon/APIAuto/issues/13
 
 更多常见问题 <br />

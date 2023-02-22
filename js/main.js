@@ -4229,7 +4229,8 @@ https://github.com/Tencent/APIJSON/issues
             this.onChange(false)
           }
           this.request(isAdminOperation, REQUEST_TYPE_JSON, this.server + '/login', req, {},function (url, res, err) {
-            if (App.isEnvCompareEnabled != true) {
+            var otherEnv = App.otherEnv || ''
+            if (App.isEnvCompareEnabled != true || (otherEnv.startsWith('http://') != true && otherEnv.startsWith('https://') != true)) {
               if (callback) {
                 callback(url, res, err)
                 return
@@ -4416,8 +4417,9 @@ https://github.com/Tencent/APIJSON/issues
           this.scripts = newDefaultScript()
           this.showTestCase(false, this.isLocalShow)
           this.onChange(false)
-          this.request(isAdminOperation, REQUEST_TYPE_JSON, this.server + '/logout', req, {}, function (url_, res_, err_) {
-            if (App.isEnvCompareEnabled != true) {
+          this.request(isAdminOperation, REQUEST_TYPE_JSON, this.server + '/logout', req, {}, function (url, res, err) {
+            var otherEnv = App.otherEnv || ''
+            if (App.isEnvCompareEnabled != true || (otherEnv.startsWith('http://') != true && otherEnv.startsWith('https://') != true)) {
               if (callback) {
                 callback(url, res, err)
               }
@@ -7848,9 +7850,11 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
         const standardKey = isMLEnabled != true ? 'response' : 'standard'
 
         const otherEnv = this.otherEnv;
-        const otherBaseUri = this.isEnvCompareEnabled && StringUtil.isNotEmpty(otherEnv, true) ? this.getBaseUrl(otherEnv) : null
+        const otherBaseUri = this.isEnvCompareEnabled && StringUtil.isNotEmpty(otherEnv, true) ? this.getBaseUrl(otherEnv) : ""
         const isEnvCompare = StringUtil.isNotEmpty(otherBaseUri, true) // 对比自己也行，看看前后两次是否幂等  && otherBaseUrl != baseUrl
         const apiUrl = this.server + '/sql/execute'
+        const isHttp = otherBaseUri != null && (otherBaseUri.startsWith('http://') || otherBaseUri.startsWith('https://'))
+        const url = isEnvCompare && isHttp ? otherBaseUri + '/sql/execute' : apiUrl
 
         for (var i = 0; i < allCount; i++) {
           const item = list[i]
@@ -7887,11 +7891,11 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
 
           const type = document.type
           const curUri = baseUrl + document.url
-          const otherUri = otherBaseUri + document.url
+          const otherUri = isHttp ? curUri : otherBaseUri + document.url
 
           this.parseRandom(document.sqlauto, document.header, -1
               , true, false, false, function (randomName, constConfig, constJson) {
-            App.request(false, type, apiUrl, Object.assign(constJson, {
+            App.request(false, type, url, Object.assign(constJson, {
               uri: isEnvCompare ? otherUri : curUri
             }), {}, function (url, res, err) {
               if (isEnvCompare != true) {

@@ -7916,8 +7916,12 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
 
               const otherErr = err
               const rsp = App.removeDebugInfo(res.data)
+              const rspStr = JSON.stringify(rsp)
               const tr = item.TestRecord || {}
-              tr[standardKey] = JSON.stringify(isMLEnabled ? JSONResponse.updateFullStandard({}, rsp, isMLEnabled) : rsp) // res.data
+              if (isMLEnabled) {
+                tr.response = rspStr
+              }
+              tr[standardKey] = isMLEnabled ? JSON.stringify(JSONResponse.updateFullStandard({}, rsp, isMLEnabled)) : rspStr // res.data
               item.TestRecord = tr
 
               App.request(false, type, apiUrl, Object.assign(constJson, {

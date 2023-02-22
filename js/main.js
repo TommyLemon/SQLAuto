@@ -439,7 +439,6 @@
   })
 
 
-
   var initJson = {}
 
 // 主题 [key, String, Number, Boolean, Null, link-link, link-hover]
@@ -454,6 +453,41 @@
 
 
 // APIJSON <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+  var ERR_MSG = `
+  
+可能出现了一些问题，可以按照以下步骤解决：
+1.检查网络连接是否畅通，可用浏览器打开右侧地址： https://www.baidu.com/s?wd=%22APIJSON%22 
+2.检查 URL 是否为一个可用的 域名/IPV4 地址，可用浏览器打开试试：正常返回结果 或 非 GET 请求返回 Whitelabel Error Page，一般都没问题
+3.开启或关闭 右上方 设置>托管服务器代理，然后再试：如果开启后才通应该是 CORS 跨域问题；关闭后才通应该是用外网服务代理来访问内网导致，可退出登录后修改退关服务器地址为内网的 APIJSON 代理服务地址
+4.Disable 关闭 VPN 等 电脑/手机/平板 上的网络代理软件 App 客户端，或者切换代理服务器地址，然后再试
+5.按 Fn+F12 或 右键网页>Inspect 检查 查看 Network 接口调用信息和 Console 控制台日志
+6.查看请求目标服务器上的日志，优先找异常报错内容
+7.改用 Postman 等其它 HTTP API 接口工具测试同一个接口
+8.再试一次
+
+# 问题与解答大全(可截屏后 New issue 上报问题等待解答)：
+https://github.com/TommyLemon/APIAuto/issues
+
+如果是请求 APIJSON 后端服务，则使用以下链接：
+https://github.com/Tencent/APIJSON/issues
+
+There may be something wrong, you can follow by the steps:
+1. Check whether the network connection is available, you can open the address with a browser: https://www.google.com/search?q=%22APIJSON%22
+2. Check whether the URL is an available domain name/IPV4 address, try opening it with a browser: if return the result normally or return a Whitelabel Error Page for a non-GET request, generally the URL is available
+3. Turn it on or off at the top right, Settings>Server Proxy, and try again: If it is enabled, it should be a CORS cross-domain problem; and if it is turned off, it should be caused by using an external network service proxy to access the intranet, You can log out and modify the logout server address to the APIJSON proxy service address of the intranet
+4. Disable the network proxy software App client on the computer/phone/tablet such as VPN, or switch the proxy server address, and then try again
+5. Press Fn+F12 or right-click the webpage>Inspect to view the Network interface call information and Console console log
+6. Check the log on the request target server, and give priority to find the abnormal error content
+7. Use other HTTP API tools such as Postman to test the same interface
+8. Try again
+
+# Questions and answers (you can report the problem after taking a screenshot and wait for the answer):
+https://github.com/TommyLemon/APIAuto/issues
+
+If you are requesting an APIJSON backend service, use the following link:
+https://github.com/Tencent/APIJSON/issues
+`;
 
 
   function getRequestFromURL(url_, tryParse) {
@@ -645,6 +679,9 @@
   }
   //这些全局变量不能放在data中，否则会报undefined错误
 
+  var BREAK_ALL = 'BREAK_ALL'
+  var BREAK_LAST = 'BREAK_LAST'
+
   var baseUrl
   var inputted
   var handler
@@ -656,6 +693,62 @@
 
   var isSingle = true
 
+  var currentTarget = vInput;
+  var isInputValue = false;
+  var isClickSelectInput = false;
+  var selectionStart = 0;
+  var selectionEnd = 0;
+
+  function newDefaultScript() {
+    return { // index.html 中 v-model 绑定，不能为 null
+      case: {
+        0: {
+          pre: { // 可能有 id
+            script: '' // index.html 中 v-model 绑定，不能为 null
+          },
+          post: {
+            script: ''
+          }
+        },
+        1560244940013: {
+          pre: { // 可能有 id
+            script: '' // index.html 中 v-model 绑定，不能为 null
+          },
+          post: {
+            script: ''
+          }
+        }
+      },
+      account: {
+        0: {
+          pre: {
+            script: ''
+          },
+          post: {
+            script: ''
+          }
+        },
+        82001: {
+          pre: {
+            script: ''
+          },
+          post: {
+            script: ''
+          }
+        }
+      },
+      global: {
+        0: {
+          pre: {
+            script: ''
+          },
+          post: {
+            script: ''
+          }
+        }
+      }
+    }
+  }
 
 // APIJSON >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -671,6 +764,8 @@
       requestVersion: 3,
       requestCount: 1,
       urlComment: '带变量 SQL 模板及参数注入 示例',
+      selectIndex: 0,
+      options: [], // [{name:"id", type: "integer", comment:"主键"}, {name:"name", type: "string", comment:"用户名称"}],
       historys: [],
       history: {name: '请求0'},
       remotes: [],
@@ -683,24 +778,28 @@
       logoutSummary: {},
       accounts: [
         {
+          'id': 82001,
           'isLoggedIn': false,
           'name': '测试账号3',
           'phone': '13000082003',
           'password': '123456'
         },
         {
+          'id': 82002,
           'isLoggedIn': false,
           'name': '测试账号1',
           'phone': '13000082001',
           'password': '123456'
         },
         {
+          'id': 82003,
           'isLoggedIn': false,
           'name': '测试账号2',
           'phone': '13000082002',
           'password': '123456'
         }
       ],
+      otherEnvCookieMap: {},
       allSummary: {},
       currentAccountIndex: 0,
       currentDocIndex: -1,
@@ -713,6 +812,10 @@
       testRandomCount: 1,
       testRandomProcess: '',
       compareColor: '#0000',
+      scriptType: 'case',
+      scriptBelongId: 0,
+      scripts: newDefaultScript(),
+      isPreScript: true,
       isLoading: false,
       isRandomTest: false,
       isDelayShow: false,
@@ -720,8 +823,11 @@
       isExportShow: false,
       isExportCheckShow: false,
       isExportRandom: false,
+      isExportScript: false,
+      isOptionListShow: false,
       isTestCaseShow: false,
-      isHeaderShow: true,
+      isHeaderShow: false,
+      isScriptShow: false,
       isRandomShow: true,  // 默认展示
       isRandomListShow: false,
       isRandomSubListShow: false,
@@ -763,6 +869,7 @@
       isCrossEnabled: false,
       isMLEnabled: false,
       isDelegateEnabled: false,
+      isEnvCompareEnabled: false,
       isPreviewEnabled: false,
       isEncodeEnabled: false,
       isEditResponse: false,
@@ -793,6 +900,7 @@
       host: '',
       database: 'MYSQL', // 查文档必须，除非后端提供默认配置接口  // 用后端默认的，避免用户总是没有配置就问为什么没有生成文档和注释  'MYSQL',// 'POSTGRESQL',
       schema: 'sys',  // 查文档必须，除非后端提供默认配置接口  // 用后端默认的，避免用户总是没有配置就问为什么没有生成文档和注释   'sys',
+      otherEnv: 'jdbc:mysql://localhost:3306',  // 其它环境数据库地址，用来对比当前的
       server: 'http://apijson.cn:8080',  // Chrome 90+ 跨域问题非常难搞，开发模式启动都不行了 'http://apijson.org:9090',  //apijson.cn
       // server: 'http://47.74.39.68:9090',  // apijson.org
       thirdParty: 'SWAGGER /v2/api-docs',  //apijson.cn
@@ -951,7 +1059,7 @@
         }
 
         vUrlComment.value = isSingle || StringUtil.isEmpty(this.urlComment, true)
-          ? '' : vUrl.value + CodeUtil.getComment(this.urlComment, false, '  ')
+          ? '' : vUrl.value + CodeUtil.getComment(this.urlComment, false, ' ')
           + ' - ' + (this.requestVersion > 0 ? 'V' + this.requestVersion : 'V*');
       },
 
@@ -981,8 +1089,8 @@
         return url.replace(/ /g, '')
       },
       //获取基地址
-      getBaseUrl: function () {
-        var url = new String(vUrl.value).trim()
+      getBaseUrl: function (url_) {
+        var url = new String(url_ || vUrl.value).trim()
         var length = this.getBaseUrlLength(url)
         url = length <= 0 ? '' : url.substring(0, length)
         return url == '' ? URL_BASE : url
@@ -996,11 +1104,18 @@
         }
 
         index = url.indexOf('://')
-        return index < 0 ? 0 : index + 3 + url.substring(index + 3).indexOf('/')
+        if (index < 0) {
+          return 0
+        }
+
+        var rest = url.substring(index + 3)
+        var ind = rest.indexOf('/')
+
+        return ind < 0 ? url.length : index + 3 + ind
       },
       //获取操作方法
-      getMethod: function () {
-        var url = new String(vUrl.value).trim()
+      getMethod: function (url) {
+        var url = new String(url == null ? vUrl.value : url).trim()
         var index = this.getBaseUrlLength(url)
         url = index <= 0 ? url : url.substring(index)
         index = url.indexOf("?")
@@ -1008,6 +1123,12 @@
           url = url.substring(0, index)
         }
         return url.startsWith('/') ? url.substring(1) : url
+      },
+      getBranchUrl: function (url) {
+        var url = new String(url == null ? vUrl.value : url).trim()
+        var index = this.getBaseUrlLength(url)
+        url = index <= 0 ? url : url.substring(index)
+        return url.startsWith('/') ? url : '/' + url
       },
       //获取请求的tag
       getTag: function () {
@@ -1180,6 +1301,51 @@
 
       },
 
+      onClickSelectInput: function (item, index) {
+        isClickSelectInput = true;
+        this.selectInput(item, index, true);
+      },
+      selectInput: function (item, index, isDone) { // , isValue) {
+        var target = currentTarget = currentTarget || vInput; // currentTarget = target;
+        var isValue = isInputValue; // isInputValue = isValue;
+
+        // 失去焦点后拿不到有效值
+        // var selectionStart = target.selectionStart;
+        // var selectionEnd = target.selectionEnd;
+
+        var text = StringUtil.get(target.value);
+        var before = text.substring(0, selectionStart);
+        var after = text.substring(selectionEnd);
+
+        var name = item == null ? '' : StringUtil.get(item.name);
+        target.value = text = before + name + after
+        if (target == vScript) { // 不这样会自动回滚
+          App.scripts[App.scriptType][App.scriptBelongId][App.isPreScript ? 'pre' : 'post'].script = text
+        }
+        else if (target == vInput) {
+          inputted = target.value;
+        }
+
+        if (isDone) {
+          this.options = [];
+
+          target.focus();
+          selectionStart = target.selectionStart = selectionEnd + (isClickSelectInput ? (name.length - (isValue ? 4 : 0)) : 0)
+            + (isValue ? (after.startsWith(',') ? 1 : 0) : (target == vInput || target == vScript ? 3 : 2));
+          selectionEnd = target.selectionEnd = selectionStart + (isValue ? 0 : 4)
+          isClickSelectInput = false;
+          // vOption.focusout()
+
+          if (isInputValue != true) {
+            App.showOptions(target, text, before + name + (isSingle ? "'" : '"') + ': ', after.substring(3), true);
+          }
+        } else {
+          target.selectionStart = selectionStart;
+          selectionEnd = target.selectionEnd = selectionStart + name.length;
+          isClickSelectInput = false;
+        }
+      },
+
       // 显示保存弹窗
       showSave: function (show) {
         if (show) {
@@ -1195,12 +1361,13 @@
       },
 
       // 显示导出弹窗
-      showExport: function (show, isRemote, isRandom) {
+      showExport: function (show, isRemote, isRandom, isScript) {
         if (show) {
           // this.isExportCheckShow = isRemote
 
           if (isRemote) { //共享测试用例
             this.isExportRandom = isRandom
+            this.isExportScript = isScript
 
             // if (isRandom != true) {  // 分享搜索关键词和分页信息也挺好 } && this.isTestCaseShow != true) {  // 没有拿到列表，没用
               // setTimeout(function () {
@@ -1219,6 +1386,9 @@
             }
             if (isRandom) {
               this.exTxt.name = '随机配置 ' + this.formatDateTime()
+            }
+            else if (isScript) { // 避免 APIJSON 启动报错  '执行脚本 ' + this.formatDateTime()
+              this.exTxt.name = this.scriptType + (this.isPreScript ? 'Pre' : 'Post') + this.getCurrentScriptBelongId()
             }
             else {
               if (this.isEditResponse) {
@@ -1299,7 +1469,7 @@
       showConfig: function (show, index) {
         this.isConfigShow = false
         if (this.isTestCaseShow) {
-          if (index == 3 || index == 4 || index == 5 || index == 10) {
+          if (index == 3 || index == 4 || index == 5 || index == 10 || index == 13) {
             this.showTestCase(false, false)
           }
         }
@@ -1314,8 +1484,9 @@
             case 6:
             case 7:
             case 8:
-              this.exTxt.name = index == 0 ? this.database : (index == 1 ? this.schema : (index == 2
-                ? this.language : (index == 6 ? this.server : (index == 8 ? this.thirdParty : (this.types || []).join()))))
+            case 15:
+              this.exTxt.name = index == 0 ? this.database : (index == 1 ? this.schema : (index == 2 ? this.language
+                  : (index == 6 ? this.server : (index == 8 ? this.thirdParty : (index == 15 ? this.otherEnv : (this.types || []).join())))))
               this.isConfigShow = true
 
               if (index == 0) {
@@ -1330,7 +1501,7 @@
               else if (index == 8) {
                 this.isHeaderShow = true
 
-                alert('例如：\nSWAGGER http://apijson.cn:8080/v2/api-docs\nSWAGGER /v2/api-docs  // 省略 Host\nSWAGGER /  // 省略 Host 和 分支 URL\nRAP /repository/joined /repository/get\nYAPI /api/interface/list_menu /api/interface/get')
+                alert('例如：\nSWAGGER http://apijson.cn:8080/v2/api-docs\nSWAGGER /v2/api-docs  // 省略 Host\nSWAGGER /  // 省略 Host 和 分支 URL\nRAP /repository/joined /repository/get\nYAPI /api/interface/list_menu /api/interface/get\nPOSTMAN https://www.postman.com/collections/cd72b75c6a985f7a9737\nPOSTMAN /cd72b75c6a985f7a9737')
 
                 try {
                   this.getThirdPartyApiList(this.thirdParty, function (platform, docUrl, listUrl, itemUrl, url_, res, err) {
@@ -1341,7 +1512,7 @@
                     if (err != null || (code != null && code != 0)) {
                       App.isHeaderShow = true
                       App.isRandomShow = false
-                      alert('请把 YApi/Rap/Swagger 等网站的有效 Cookie 粘贴到请求头 Request Header 输入框后再试！')
+                      alert('请把 YApi/Rap/Swagger/Postman 等网站的有效 Cookie 粘贴到请求头 Request Header 输入框后再试！')
                     }
 
                     App.onResponse(url_, res, err)
@@ -1351,7 +1522,37 @@
                     var apiMap = CodeUtil.thirdPartyApiMap || {}
 
                     if (platform == PLATFORM_POSTMAN) {
-                      alert('尚未开发 ' + PLATFORM_POSTMAN)
+                      var apis = data.item || data.requests
+                      if (apis != null) {
+                        for (var i = 0; i < apis.length; i++) {
+                          var item = apis[i]
+                          var req = item == null ? null : item.request
+                          var urlObj = req.url || {}
+                          var path = urlObj.path
+                          var url = path instanceof Array ? '/' + path.join('/') : (typeof urlObj == 'string' ? urlObj : urlObj.raw)
+                          if (StringUtil.isEmpty(url, true)) {
+                            url = item.url
+                          }
+                          if (url != null && url.startsWith('{{url}}')) {
+                            url = url.substring('{{url}}'.length)
+                          }
+                          url = App.getBranchUrl(url)
+
+                          if (StringUtil.isEmpty(url, true)) {
+                            continue
+                          }
+
+                          var name = item.name
+
+                          apiMap[url] = {
+                            name: name,
+                            request: req,
+                            response: item.response == null || item.response.length <= 0 ? null : item.response[0],
+                            detail: name
+                          }
+                        }
+                      }
+
                       return true
                     }
                     else if (platform == PLATFORM_SWAGGER) {
@@ -1412,6 +1613,11 @@
               this.isHeaderShow = show
               this.saveCache('', 'isHeaderShow', show)
               break
+            case 13:
+              this.isScriptShow = show
+              this.saveCache('', 'isScriptShow', show)
+              this.listScript()
+              break
             case 5:
               this.isRandomShow = show
               this.saveCache('', 'isRandomShow', show)
@@ -1419,6 +1625,12 @@
             case 9:
               this.isDelegateEnabled = show
               this.saveCache('', 'isDelegateEnabled', show)
+              break
+            case 14:
+              this.isEnvCompareEnabled = show
+              this.saveCache('', 'isEnvCompareEnabled', show)
+
+              // this.enableML(false)
               break
             case 10:
               this.isPreviewEnabled = show
@@ -1462,6 +1674,10 @@
           this.isHeaderShow = show
           this.saveCache('', 'isHeaderShow', show)
         }
+        else if (index == 13) {
+          this.isScriptShow = show
+          this.saveCache('', 'isScriptShow', show)
+        }
         else if (index == 5) {
           this.isRandomShow = show
           this.saveCache('', 'isRandomShow', show)
@@ -1474,6 +1690,11 @@
           this.isPreviewEnabled = show
           this.saveCache('', 'isPreviewEnabled', show)
           // vRequestMarkdown.innerHTML = ''
+        }
+        else if (index == 14) {
+          this.isEnvCompareEnabled = show
+          this.saveCache('', 'isEnvCompareEnabled', show)
+          this.enableML(this.isMLEnabled)
         }
         else if (index == 12) {
           this.isEncodeEnabled = show
@@ -1575,12 +1796,14 @@
         }
         var val = {
           name: this.history.name,
+          detail: this.history.name,
           type: this.type,
           url: '/' + this.getMethod(),
           sqlauto: inputted,
           response: this.jsoncon,
           header: vHeader.value,
-          random: vRandom.value
+          random: vRandom.value,
+          scripts: this.scripts
         }
         var key = String(Date.now())
         localforage.setItem(key, val, function (err, value) {
@@ -1644,13 +1867,91 @@
       restoreRemote: function (index, item, test) {
         this.currentDocIndex = index
         this.currentRemoteItem = item
-        this.restore((item || {}).Document, ((item || {}).TestRecord || {}).response, true, test)
+        this.restore(item, ((item || {}).TestRecord || {}).response, true, test)
       },
       // 根据历史恢复数据
       restore: function (item, response, isRemote, test) {
         this.isEditResponse = false
 
         item = item || {}
+        var scripts = item.scripts
+        if (isRemote) {
+          var orginItem = item
+          var doc = item.Document || {}
+          var docId = doc.id || 0
+
+          var pre = Object.assign({
+            'script': ''
+          }, item['Script:pre'] || {})
+          var post = Object.assign({
+            'script': ''
+          }, item['Script:post'] || {})
+
+          var preId = pre.id
+          var postId = post.id
+          if (docId > 0 && (preId == null || postId == null)) {
+            // var accountId = this.getCurrentAccountId();
+            this.request(true, REQUEST_TYPE_JSON, '/get', {
+              'Script:pre': preId != null ? undefined : {
+                'ahead': 1,
+                // 'testAccountId': 0,
+                'documentId': docId,
+                '@order': 'date-'
+              },
+              'Script:post': postId != null ? undefined : {
+                'ahead': 0,
+                // 'testAccountId': 0,
+                'documentId': docId,
+                '@order': 'date-'
+              }
+            }, {}, function (url, res, err) {
+              var rpObj = res.data
+              if (JSONResponse.isSuccess(rpObj) != true) {
+                App.log(err != null ? err : (rpObj == null ? '' : rpObj.msg))
+                return
+              }
+
+              // var scripts = item.scripts || {}
+              var scripts = orginItem.scripts || {}
+              // var ss = scripts.case
+              // if (ss == null) {
+              //   scripts.case = ss = {}
+              // }
+
+              // var bs = ss[docId]
+              // if (bs == null) {
+              //   ss[docId] = bs = {}
+              // }
+
+              var bs = scripts
+
+              var pre = rpObj['Script:pre']
+              if (pre != null && pre.script != null) {
+                bs.pre = orginItem['Script:pre'] = rpObj['Script:pre']
+              }
+
+              var post = rpObj['Script:post']
+              if (post != null && post.script != null) {
+                bs.post = orginItem['Script:post'] = rpObj['Script:post']
+              }
+
+              orginItem.scripts = scripts
+
+              App.changeScriptType(App.scriptType)
+              App.scripts.case[docId] = scripts
+            })
+          }
+
+          if (scripts == null) {
+            scripts = {
+              pre: pre,
+              post: post
+            }
+          }
+          item.scripts = scripts
+
+          item = doc
+        }
         // localforage.getItem(item.key || '', function (err, value) {
           var branch = new String(item.url || '/get')
           if (branch.startsWith('/') == false) {
@@ -1666,6 +1967,9 @@
           vInput.value = StringUtil.get(item.sqlauto)
           vHeader.value = StringUtil.get(item.header)
           vRandom.value = StringUtil.get(item.random)
+          this.changeScriptType(this.scriptType)
+          this.scripts.case[docId] = scripts
+
           this.onChange(false)
 
           if (isRemote) {
@@ -1836,6 +2140,49 @@
           }
 
           const isExportRandom = this.isExportRandom
+          const isExportScript = this.isExportScript
+
+          const currentAccountId = this.getCurrentAccountId()
+          const doc = (this.currentRemoteItem || {}).Document || {}
+          const tr = (this.currentRemoteItem || {}).TestRecord || {}
+          const did = isExportRandom && btnIndex == 1 ? null : doc.id
+
+          if (isExportScript) {
+            const extName = this.exTxt.name;
+            const scriptType = this.scriptType
+            const script = ((this.scripts[scriptType] || {})[this.getCurrentScriptBelongId()] || {})[this.isPreScript ? 'pre' : 'post'] || {};
+            const sid = script.id
+            const url = sid == null ? '/post' : '/put'
+            const req = {
+              format: false,
+              'Script': Object.assign({
+                'id': sid == null ? undefined : sid,
+                'simple': 1,
+                'ahead': this.isPreScript ? 1 : 0,
+                'documentId': did == null || scriptType != 'case' ? 0 : did,
+                'testAccountId': scriptType != 'account' ? 0 : currentAccountId,
+                'name': extName,
+                'script': vScript.value
+              }, script),
+              'tag': 'Script'
+            }
+
+            this.request(true, REQUEST_TYPE_JSON, url, req, {}, function (url, res, err) {
+              App.onResponse(url, res, err)
+
+              var rpObj = res.data || {}
+              var isPut = url.indexOf('/put') >= 0
+              var ok = JSONResponse.isSuccess(rpObj)
+              alert((isPut ? '修改' : '上传') + (ok ? '成功' : '失败！\n' + StringUtil.get(err != null ? err.message : rpObj.msg)))
+
+              if (ok && ! isPut) {
+                script.id = (rpObj.Script || {}).id
+              }
+            })
+
+            return
+          }
+
           const isEditResponse = this.isEditResponse
           const isReleaseRESTful = isExportRandom && btnIndex == 1 && ! isEditResponse
 
@@ -1865,9 +2212,7 @@
             return
           }
 
-          const doc = (this.currentRemoteItem || {}).Document || {}
-          const tr = (this.currentRemoteItem || {}).TestRecord || {}
-          const did = isExportRandom && btnIndex == 1 ? null : doc.id
+
           if (isExportRandom && btnIndex <= 0 && did == null) {
             alert('请先共享测试用例！')
             return
@@ -1875,7 +2220,6 @@
 
           this.isTestCaseShow = false
 
-          const currentAccountId = this.getCurrentAccountId()
           const currentResponse = this.view != 'code' || StringUtil.isEmpty(this.jsoncon, true) ? {} : this.removeDebugInfo(JSON.parse(this.jsoncon));
 
           const after = inputted // isSingle ? this.switchQuote(inputted) : inputted;  // this.toDoubleJSON(inputted);
@@ -2337,8 +2681,13 @@
             this.types = StringUtil.split(this.exTxt.name)
             this.saveCache('', 'types', this.types)
             break
+          case 15:
+            this.otherEnv = StringUtil.get(this.exTxt.name)
+            this.saveCache('', 'otherEnv', this.otherEnv)
+            break
           case 8:
-            this.getThirdPartyApiList(this.exTxt.name, function (platform, docUrl, listUrl, itemUrl, url_, res, err) {
+            var thirdParty = this.exTxt.name
+            this.getThirdPartyApiList(thirdParty, function (platform, docUrl, listUrl, itemUrl, url_, res, err) {
               var jsonData = (res || {}).data
               var isJSONData = jsonData instanceof Object
               if (isJSONData == false) {  //后面是 URL 才存储；是 JSON 数据则不存储
@@ -2348,10 +2697,7 @@
 
               const header = App.getHeader(vHeader.value)
 
-              if (platform == PLATFORM_POSTMAN) {
-                alert('尚未开发 ' + PLATFORM_POSTMAN)
-              }
-              else if (platform == PLATFORM_SWAGGER) {
+              if (platform == PLATFORM_SWAGGER) {
                 var swaggerCallback = function (url_, res, err) {
                   if (App.isSyncing) {
                     alert('正在同步，请等待完成')
@@ -2394,20 +2740,26 @@
                   App.request(false, REQUEST_TYPE_PARAM, docUrl, {}, header, swaggerCallback)
                 }
               }
-              else if (platform == PLATFORM_RAP || platform == PLATFORM_YAPI) {
+              else if (platform == PLATFORM_RAP || platform == PLATFORM_YAPI || platform == PLATFORM_POSTMAN) {
                 var isRap = platform == PLATFORM_RAP
+                var isPostman = isRap != true && platform == PLATFORM_POSTMAN
 
                 var itemCallback = function (url, res, err) {
                   try {
                     App.onResponse(url, res, err)
                   } catch (e) {}
 
-                  var data = res.data == null ? null : res.data.data
-                  if (isRap) {
-                    var modules = data == null ? null : data.modules
+                  var data = res.data == null ? null : (isPostman ? (res.data.item || res.data.requests)  : res.data.data)
+                  if (isRap || isPostman) {
+                    var modules = data == null ? null : (isRap ? data.modules : data)
                     if (modules != null) {
                       for (var i = 0; i < modules.length; i++) {
                         var it = modules[i] || {}
+                        if (isPostman) {
+                          App.uploadPostmanApi(it)
+                          continue
+                        }
+
                         var interfaces = it.interfaces || []
 
                         for (var j = 0; j < interfaces.length; j++) {
@@ -2422,6 +2774,10 @@
                 }
 
                 if (isJSONData) {
+                  App.uploadTotal = 0 // apis.length || 0
+                  App.uploadDoneCount = 0
+                  App.uploadFailCount = 0
+
                   itemCallback(itemUrl, { data: jsonData }, null)
                 }
                 else {
@@ -2433,7 +2789,7 @@
                     App.isSyncing = true
                     App.onResponse(url_, res, err)
 
-                    var apis = (res.data || {}).data
+                    var apis = res.data == null ? null : (isPostman ? res.data.item : res.data.data)
                     if (apis == null) { // || apis.length <= 0) {
                       App.isSyncing = false
                       alert('没有查到 ' + (isRap ? 'Rap' : 'YApi') + ' 文档！请开启跨域代理，并检查 URL 是否正确！')
@@ -2444,6 +2800,11 @@
                     App.uploadTotal = 0 // apis.length || 0
                     App.uploadDoneCount = 0
                     App.uploadFailCount = 0
+
+                    if (isPostman) {
+                      itemCallback(itemUrl, { data: res.data }, null)
+                      return
+                    }
 
                     for (var url in apis) {
                       var item = apis[url] || {}
@@ -2483,7 +2844,20 @@
           const header = App.getHeader(vHeader.value)
 
           if (platform == PLATFORM_POSTMAN) {
-            alert('尚未开发 ' + PLATFORM_POSTMAN)
+            if (isJSONData) {
+              listCallback(platform, docUrl, listUrl, itemUrl, itemUrl, { data: jsonData }, null)
+            }
+            else {
+              App.request(false, REQUEST_TYPE_PARAM, docUrl, {}, header, function (url_, res, err) {
+                if (listCallback != null && listCallback(platform, docUrl, listUrl, itemUrl, url_, res, err)) {
+                  return
+                }
+
+                if (itemCallback != null) {
+                  itemCallback(platform, docUrl, listUrl, itemUrl, itemUrl, res, err)
+                }
+              })
+            }
           }
           else if (platform == PLATFORM_SWAGGER) {
             if (isJSONData) {
@@ -2521,7 +2895,9 @@
 
                 var apis = (res.data || {}).data
                 if (apis == null) { // || apis.length <= 0) {
-                  alert('没有查到 ' + (isRap ? 'Rap' : 'YApi') + ' 文档！请开启跨域代理，并检查 URL 是否正确！YApi/Rap/Swagger 网站的 Cookie 必须粘贴到请求头 Request Header 输入框！')
+                  alert('没有查到 ' + (isRap ? 'Rap' : 'YApi') + ' 文档！' +
+                    '\n请开启跨域代理，并检查 URL 是否正确！' +
+                    '\nYApi/Rap/Swagger/Postman 网站的 Cookie 必须粘贴到请求头 Request Header 输入框！')
                   return
                 }
 
@@ -2551,9 +2927,7 @@
 
                 }
               })
-
             }
-
           }
           else {
             alert('第三方平台只支持 Postman, Swagger, Rap, YApi ！')
@@ -2578,7 +2952,13 @@
         var listUrl = null
         var itemUrl = null
 
-        if (platform == PLATFORM_SWAGGER) {
+        if (platform == PLATFORM_POSTMAN) {
+          if (docUrl.startsWith('/') || docUrl.indexOf('://') < 0) {
+            docUrl = 'https://www.postman.com' + (docUrl.startsWith('/collections') ? '' : '/collections') + (docUrl.startsWith('/') ? '' : '/') + docUrl
+          }
+          listUrl = docUrl
+        }
+        else if (platform == PLATFORM_SWAGGER) {
           if (docUrl == '/') {
             docUrl += 'v2/api-docs'
           }
@@ -2601,6 +2981,111 @@
         }
 
         callback(platform, jsonData, docUrl, listUrl, itemUrl)
+      },
+
+      /**上传 Postman API
+       * @param docItem
+       * @param callback
+       */
+      uploadPostmanApi: function(docItem) {
+        var api = docItem
+        if (api == null) {
+          log('postApi', 'api == null  >> return')
+          this.exTxt.button = 'All:' + this.uploadTotal + '\nDone:' + this.uploadDoneCount + '\nFail:' + this.uploadFailCount
+          return false
+        }
+
+        this.uploadTotal ++
+
+        var request = api.request || {}
+        var response = api.response || []
+        var body = request.body || {}
+        var json = body.raw || api.rawModeData
+        var options = body.options || {}
+        var language = (options.raw || {}).language
+
+        var type
+        switch ((api.method || request.method) || '') {
+          case 'GET':
+            type = REQUEST_TYPE_PARAM
+            break
+          case 'POST':
+            switch (language || '') {
+              case 'form-data': // FIXME
+                type = REQUEST_TYPE_DATA
+                break
+              case 'form-url-encoded': // FIXME
+                type = REQUEST_TYPE_FORM
+                break
+              // case 'json':  //JSON
+              default:
+                type = REQUEST_TYPE_JSON
+                break
+            }
+            break
+          default:
+            type = REQUEST_TYPE_JSON
+            break
+        }
+
+
+        var urlObj = request.url || {}
+        var path = urlObj.path
+        var url = path instanceof Array ? '/' + path.join('/') : (typeof urlObj == 'string' ? urlObj : urlObj.raw)
+        if (StringUtil.isEmpty(url, true)) {
+          url = api.url
+        }
+        if (url != null && url.startsWith('{{url}}')) {
+          url = url.substring('{{url}}'.length)
+        }
+
+        var parameters = api.queryParams || request.queryParams || (urlObj instanceof Object ? urlObj.query : null)
+        var parameters2 = []
+        if (parameters != null && parameters.length > 0) {
+
+          for (var k = 0; k < parameters.length; k++) {
+            var paraItem = parameters[k] || {}
+            var name = paraItem.key || ''
+            if (StringUtil.isEmpty(name, true)) {
+              continue
+            }
+
+            var val = paraItem.value
+            if (val == '{{' + name + '}}') {
+              val = null
+            }
+
+            //转成和 Swagger 一样的字段及格式
+            paraItem.name = name
+            paraItem.type = paraItem.type == 'Number' ? 'integer' : StringUtil.toLowerCase(paraItem.type)
+            paraItem.default = val
+
+            parameters2.push(paraItem)
+          }
+        }
+
+        var header = ''
+        var headers = request.header || api.headerData || []
+        if (headers != null && headers.length > 0) {
+          for (var k = 0; k < headers.length; k++) {
+            var paraItem = headers[k] || {}
+            var name = paraItem.key || ''
+            if (StringUtil.isEmpty(name, true)) {
+              continue
+            }
+
+            var val = paraItem.value
+            header += (k <= 0 ? '' : '\n') + name + ': ' + (val == null ? '' : val)
+                + (StringUtil.isEmpty(paraItem.description, true) ? '' : ' // ' + paraItem.description)
+          }
+        }
+
+        if (StringUtil.isEmpty(header, true)) {
+          header = api.headers
+        }
+
+        return this.uploadThirdPartyApi(type, api.name || request.name, url, parameters2, json, header
+          , api.description || request.description, null, response == null ? null : response[0])
       },
 
       /**上传 Swagger API
@@ -2636,7 +3121,7 @@
         }
 
         return this.uploadThirdPartyApi(method == 'get' ? REQUEST_TYPE_PARAM : REQUEST_TYPE_JSON
-          , api.summary, url, parameters2, api.headers, api.description)
+          , api.summary, url, parameters2, null, api.headers, api.description)
       },
 
 
@@ -2708,7 +3193,7 @@
           }
         }
 
-        return this.uploadThirdPartyApi(type, api.name, api.url, parameters2, header, api.description)
+        return this.uploadThirdPartyApi(type, api.name, api.url, parameters2, null, header, api.description)
       },
 
       /**上传 YApi
@@ -2739,7 +3224,7 @@
         var typeAndParam = this.parseYApiTypeAndParam(api)
 
         return this.uploadThirdPartyApi(
-          typeAndParam.type, api.title, api.path, typeAndParam.param, header
+          typeAndParam.type, api.title, api.path, typeAndParam.param, null, header
           ,  (StringUtil.trim(api.username) + ': ' + StringUtil.trim(api.title)
           + '\n' + (api.up_time == null ? '' : (typeof api.up_time != 'number' ? api.up_time : new Date(1000*api.up_time).toLocaleString()))
           + '\nhttp://apijson.cn/yapi/project/1/interface/api/' + api._id
@@ -2845,39 +3330,60 @@
         return null
       },
 
-      //上传第三方平台的 API 至 SQLAuto
-      uploadThirdPartyApi: function(type, name, url, parameters, header, description, creator) {
+      //上传第三方平台的 API 至 APIAuto
+      uploadThirdPartyApi: function(type, name, url, parameters, json, header, description, creator, rspObj) {
+        if (typeof json == 'string') {
+          json = JSON.parse(json)
+        }
+        var reqObj = json || {}
+
         var req = '{'
 
+        var isJSONEmpty = json == null || Object.keys(json).length <= 0
         if (parameters != null && parameters.length > 0) {
           for (var k = 0; k < parameters.length; k++) {
             var paraItem = parameters[k] || {}
             var n = paraItem.name || ''  //传进来前已过滤，这里只是避免万一为 null 导致后面崩溃
-            var t = paraItem.type || ''
             var val = paraItem.default
+            var t = paraItem.type || typeof val
 
             if (val == undefined) {
               val = this.generateValue(t, n)
+              reqObj[n] = val
             }
-            else if (typeof val == 'string' && (StringUtil.isEmpty(t, true) || t == 'string')) {
-              val = '"' + val.replace(/"/g, '\\"') + '"'
+
+            reqObj[n] = val
+
+            if (typeof val == 'string' && (StringUtil.isEmpty(t, true) || t == 'string')) {
+              val = isJSONEmpty ? ('"' + val.replace(/"/g, '\\"') + '"') : val
             }
             else if (val instanceof Object) {
               val = JSON.stringify(val, null, '    ')
             }
 
-            req += '\n    "' + n + '": ' + val + (k < parameters.length - 1 ? ',' : '')
-              + '  // ' + (paraItem.required ? '必填。 ' : '') + StringUtil.trim(paraItem.description)
+            if (isJSONEmpty) {
+              req += '\n    "' + n + '": ' + val + (k < parameters.length - 1 ? ',' : '')
+                + ' // ' + (paraItem.required ? '必填。 ' : '') + StringUtil.trim(paraItem.description)
+            } else {
+              url += (k <= 0 && url.indexOf('?') < 0 ? '?' : '&') + n + '=' + (val == null ? '' : val)
+            }
           }
 
         }
 
         req += '\n}'
 
-        if (StringUtil.isEmpty(description, true) == false) {
-          req += '\n\n/**\n\n' + StringUtil.trim(description).replace(/\*\//g, '* /') + '\n\n*/'
+        if (isJSONEmpty != true) {
+          req = JSON.stringify(json, null, '    ')
         }
 
+        var commentObj = JSONResponse.updateStandard({}, reqObj);
+        CodeUtil.parseComment(req, null, url, this.database, this.language, true, commentObj, true)
+
+        name = StringUtil.get(name)
+        if (name.length > 100) {
+          name = name.substring(0, 60) + ' ... ' + name.substring(70, 100)
+        }
 
         var currentAccountId = this.getCurrentAccountId()
         this.request(true, REQUEST_TYPE_JSON, this.server + '/post', {
@@ -2890,13 +3396,14 @@
             'url': url,
             'request': '{}',
             'sqlauto': req,
-            'header': StringUtil.isEmpty(header, true) ? null : StringUtil.trim(header)
+            'header': StringUtil.isEmpty(header, true) ? null : StringUtil.trim(header),
+            'detail': StringUtil.trim(description).replace(/\*\//g, '* /')
           },
           'TestRecord': {
             'randomId': 0,
-            'host': this.getBaseUrl(),
+            'host': this.getBaseUrl(url),
             'testAccountId': currentAccountId,
-            'response': ''
+            'response': rspObj == null ? '' : JSON.stringify(rspObj, null, '    '),
           },
           'tag': 'Document'
         }, {}, function (url, res, err) {
@@ -2968,8 +3475,6 @@
 
 
 
-
-
       onClickAccount: function (index, item, callback) {
         this.isTestCaseShow = false
         var accounts = this.accounts
@@ -2984,6 +3489,7 @@
               item.isLoggedIn = false
               App.saveCache(App.getBaseUrl(), 'currentAccountIndex', App.currentAccountIndex)
               App.saveCache(App.getBaseUrl(), 'accounts', App.accounts)
+              App.changeScriptType(App.scriptType)
 
               if (callback != null) {
                 callback(false, index, err)
@@ -2996,6 +3502,7 @@
           }
 
           this.currentAccountIndex = index
+          this.changeScriptType(App.scriptType)
           return
         }
 
@@ -3018,6 +3525,7 @@
                 item.isLoggedIn = false
                 App.saveCache(App.getBaseUrl(), 'currentAccountIndex', App.currentAccountIndex)
                 App.saveCache(App.getBaseUrl(), 'accounts', App.accounts)
+                App.changeScriptType(App.scriptType)
 
                 if (callback != null) {
                   callback(false, index, err)
@@ -3025,6 +3533,7 @@
               });
 
               this.currentAccountIndex = -1
+              this.changeScriptType(App.scriptType)
             }
             else {
               //login
@@ -3039,13 +3548,18 @@
                   }
                 }
                 else {
+                  var headers = res.headers || {}
+
+                  item.id = user.id
                   item.name = user.name
                   item.remember = data.remember
                   item.isLoggedIn = true
+                  item.cookie = res.cookie || headers.cookie || headers.Cookie || headers['set-cookie'] || headers['Set-Cookie']
 
                   App.accounts[App.currentAccountIndex] = item
                   App.saveCache(App.getBaseUrl(), 'currentAccountIndex', App.currentAccountIndex)
                   App.saveCache(App.getBaseUrl(), 'accounts', App.accounts)
+                  App.changeScriptType(App.scriptType)
 
                   if (callback != null) {
                       callback(true, index, err)
@@ -3068,6 +3582,7 @@
 
         //切换到这个tab
         this.currentAccountIndex = index
+        this.changeScriptType(App.scriptType)
 
         //目前还没做到同一标签页下测试账号切换后，session也跟着切换，所以干脆每次切换tab就重新登录
         if (item != null) {
@@ -3160,6 +3675,7 @@
             '[]': {
               'count': this.testCaseCount || 100, //200 条测试直接卡死 0,
               'page': this.testCasePage || 0,
+              'join': '@/TestRecord,@/Script:pre,@/Script:post',
               'Document': {
                 '@order': 'version-,date-',
                 'userId': this.User.id,
@@ -3178,6 +3694,18 @@
                 '@order': 'date-',
                 '@column': 'id,userId,documentId,testAccountId,duration,minDuration,maxDuration,response' + (this.isMLEnabled ? ',standard' : ''),
                 'standard{}': this.isMLEnabled ? (this.database == 'SQLSERVER' ? 'len(standard)>2' : 'length(standard)>2') : null  //用 MySQL 5.6   '@having': this.isMLEnabled ? 'json_length(standard)>0' : null
+              },
+              'Script:pre': {
+                'ahead': 1,
+                // 'testAccountId': 0,
+                'documentId@': '/Document/id',
+                '@order': 'date-'
+              },
+              'Script:post': {
+                'ahead': 0,
+                // 'testAccountId': 0,
+                'documentId@': '/Document/id',
+                '@order': 'date-'
               }
             },
             '@role': IS_NODE ? null : 'LOGIN',
@@ -3220,6 +3748,11 @@
           this.showCompare4TestCaseList(show)
 
           //this.onChange(false)
+        } else if (IS_BROWSER) { // 解决一旦错了，就只能清缓存
+          this.testCaseCount = 50
+          this.testCasePage = 0
+          this.saveCache(this.server, 'testCasePage', this.testCasePage)
+          this.saveCache(this.server, 'testCaseCount', this.testCaseCount)
         }
       },
 
@@ -3475,6 +4008,121 @@
         return val == null && defaultValue != null ? defaultValue : val
       },
 
+      getCurrentDocumentId: function() {
+        var d = (this.currentRemoteItem || {}).Document
+        return d == null ? null : d.id;
+      },
+      getCurrentRandomId: function() {
+        var r = (this.currentRandomItem || {}).Random
+        return r == null ? null : r.id;
+      },
+      getCurrentScriptBelongId: function() {
+        return this.getScriptBelongId(this.scriptType)
+      },
+      getScriptBelongId: function(scriptType) {
+        var st = scriptType;
+        var bid = st == 'global' ? 0 : ((st == 'account' ? this.getCurrentAccountId() : this.getCurrentDocumentId()) || 0)
+        return bid
+      },
+      listScript: function() {
+        var req = {
+          'Script:pre': {
+            'ahead': 1,
+            'testAccountId': 0,
+            'documentId': 0,
+            '@order': 'date-'
+          },
+          'Script:post': {
+            'ahead': 0,
+            'testAccountId': 0,
+            'documentId': 0,
+            '@order': 'date-'
+          }
+        }
+
+        var accounts = this.accounts || []
+        for (let i = 0; i < accounts.length; i++) {
+          var a = accounts[i]
+          var id = a == null ? null : a.id
+          if (id == null) {
+            continue
+          }
+
+          req['account_' + id] = { // 用数字被居然强制格式化到 JSON 最前
+            'Script:pre': {
+              'ahead': 1,
+              'testAccountId': id,
+              'documentId': 0,
+              '@order': 'date-'
+            },
+            'Script:post': {
+              'ahead': 0,
+              'testAccountId': id,
+              'documentId': 0,
+              '@order': 'date-'
+            }
+          }
+        }
+
+        this.request(true, REQUEST_TYPE_JSON, '/get', req, {}, function (url, res, err) {
+          var rpObj = res.data
+          if (JSONResponse.isSuccess(rpObj) != true) {
+            App.log(err != null ? err : (rpObj == null ? '' : rpObj.msg))
+            return
+          }
+
+          var scripts = App.scripts || {}
+          var ss = scripts.global
+          if (ss == null) {
+            scripts.global = ss = {}
+          }
+
+          var bs = ss['0'] || {}
+          if (bs == null) {
+            ss['0'] = bs = {}
+          }
+
+          var pre = rpObj['Script:pre']
+          if (pre != null && pre.script != null) {
+            bs.pre = rpObj['Script:pre']
+          }
+          var post = rpObj['Script:post']
+          if (post != null && post.script != null) {
+            bs.post = rpObj['Script:post']
+          }
+
+          // delete rpObj['Script:pre']
+          // delete rpObj['Script:post']
+
+          var cs = scripts.account
+          if (cs == null) {
+            scripts.account = cs = {}
+          }
+
+          for (let key in rpObj) {
+            var val = rpObj[key]
+            var pre = val == null || key.startsWith('account_') != true ? null : val['Script:pre']
+            if (pre == null) {
+              continue
+            }
+
+            var post = val['Script:post']
+
+            var bs = cs[key.substring('account_'.length)]
+
+            if (pre != null) { // && pre.script != null) {
+              bs.pre = pre
+            }
+            if (post != null) { // && post.script != null) {
+              bs.post = post
+            }
+          }
+
+          App.scripts = Object.assign(newDefaultScript(), scripts)
+        })
+      },
+
+
       /**登录确认
        */
       confirm: function () {
@@ -3575,17 +4223,41 @@
             }
           }
 
+          this.scripts = newDefaultScript()
           this.showTestCase(false, this.isLocalShow)
           if (IS_BROWSER) {
             this.onChange(false)
           }
           this.request(isAdminOperation, REQUEST_TYPE_JSON, this.server + '/login', req, {},function (url, res, err) {
-            if (callback) {
-              callback(url, res, err)
+            if (App.isEnvCompareEnabled != true) {
+              if (callback) {
+                callback(url, res, err)
+                return
+              }
+
+              App.onLoginResponse(isAdminOperation, req, url, res, err)
               return
             }
 
-            App.onLoginResponse(isAdminOperation, req, url, res, err)
+            App.request(isAdminOperation, REQUEST_TYPE_JSON, App.getBaseUrl(App.otherEnv) + '/login'
+                , req, {}, function (url_, res_, err_) {
+                  var data = res_.data
+                  var user = JSONResponse.isSuccess(data) ? data.user : null
+                  if (user != null) {
+                    var headers = res.headers || {}
+                    App.otherEnvCookieMap[req.phone] = res.cookie || headers.cookie || headers.Cookie || headers['set-cookie'] || headers['Set-Cookie']
+                    App.saveCache(App.otherEnv, 'otherEnvCookieMap', App.otherEnvCookieMap)
+                  }
+
+                  if (callback) {
+                    callback(url, res, err)
+                    return
+                  }
+
+                  App.onResponse(url_, res_, err_);
+                  App.onLoginResponse(isAdminOperation, req, url, res, err)
+            }, App.scripts)
+
           })
         }
       },
@@ -3650,6 +4322,8 @@
 
             App.saveCache(App.getBaseUrl(), 'currentAccountIndex', App.currentAccountIndex)
             App.saveCache(App.getBaseUrl(), 'accounts', App.accounts)
+
+            App.listScript()
           }
         }
       },
@@ -3657,6 +4331,7 @@
       /**注册
        */
       register: function (isAdminOperation) {
+        this.scripts = newDefaultScript()
         this.request(isAdminOperation, REQUEST_TYPE_JSON, '/register', {
           Privacy: {
             phone: this.account,
@@ -3679,12 +4354,13 @@
             App.account = privacy.phone
             App.loginType = 'login'
           }
-        })
+        }, this.scripts)
       },
 
       /**重置密码
        */
       resetPassword: function (isAdminOperation) {
+        this.scripts = newDefaultScript()
         this.request(isAdminOperation, REQUEST_TYPE_JSON, '/put/password', {
           verify: vVerify.value,
           Privacy: {
@@ -3704,7 +4380,7 @@
             App.account = privacy.phone
             App.loginType = 'login'
           }
-        })
+        }, this.scripts)
       },
 
       /**退出
@@ -3737,15 +4413,33 @@
           })
         }
         else {
+          this.scripts = newDefaultScript()
           this.showTestCase(false, this.isLocalShow)
           this.onChange(false)
-          this.request(isAdminOperation, REQUEST_TYPE_JSON, this.server + '/logout', req, {}, callback)
+          this.request(isAdminOperation, REQUEST_TYPE_JSON, this.server + '/logout', req, {}, function (url_, res_, err_) {
+            if (App.isEnvCompareEnabled != true) {
+              if (callback) {
+                callback(url, res, err)
+              }
+              return
+            }
+
+            App.request(isAdminOperation, REQUEST_TYPE_JSON, App.getBaseUrl(App.otherEnv) + '/logout'
+                , req, {}, function (url_, res_, err_) {
+              if (callback) {
+                callback(url, res, err)
+                return
+              }
+            })
+
+          }, this.scripts)
         }
       },
 
       /**获取验证码
        */
       getVerify: function (isAdminOperation) {
+        this.scripts = newDefaultScript()
         var type = this.loginType == 'login' ? 0 : (this.loginType == 'register' ? 1 : 2)
         this.showTestCase(false, this.isLocalShow)
         this.onChange(false)
@@ -3761,7 +4455,7 @@
           if (verify != null) { //FIXME isEmpty校验时居然在verify=null! StringUtil.isEmpty(verify, true) == false) {
             vVerify.value = verify
           }
-        })
+        }, this.scripts)
       },
 
       clearUser: function () {
@@ -3925,7 +4619,7 @@
               + '                                                                                                       \n';  //解决遮挡
 
             vUrlComment.value = isSingle || StringUtil.isEmpty(this.urlComment, true)
-              ? '' : vUrl.value + CodeUtil.getComment(this.urlComment, false, '  ')
+              ? '' : vUrl.value + CodeUtil.getComment(this.urlComment, false, ' ')
               + ' - ' + (this.requestVersion > 0 ? 'V' + this.requestVersion : 'V*');
 
             if (! isSingle) {
@@ -3986,7 +4680,7 @@
       onChange: function (delay) {
         this.setBaseUrl();
 
-        if (IS_NODE) {
+        if (IS_NODE || document.activeElement == vOption || this.options.length > 0) {
           return;
         }
 
@@ -4015,7 +4709,7 @@
 
         // vInput.value = this.switchQuote(vInput.value);
 
-        this.isTestCaseShow = false
+        this.isTestCaseShow = false;
 
         // // 删除注释 <<<<<<<<<<<<<<<<<<<<<
         //
@@ -4088,6 +4782,88 @@
         this.onChange(false);
       },
 
+      changeScriptType: function (type) {
+        type = type || 'case'
+        if (type == 'account') {
+          var id = this.getCurrentAccountId()
+          if (id == null || id <= 0) {
+            type = 'case'
+          }
+        }
+
+        this.scriptBelongId = 0 // 解决可能的报错
+        this.scriptType = type
+        var bid = this.getCurrentScriptBelongId()
+
+        var scripts = this.scripts
+        if (scripts == null) {
+          scripts = newDefaultScript()
+          this.scripts = scripts
+        }
+        var ss = scripts[type]
+        if (ss == null) {
+          ss = {
+            0: {
+              pre: { // 可能有 id
+                script: '' // index.html 中 v-model 绑定，不能为 null
+              },
+              post: {
+                script: ''
+              }
+            },
+            [bid]: {
+              pre: { // 可能有 id
+                script: '' // index.html 中 v-model 绑定，不能为 null
+              },
+              post: {
+                script: ''
+              }
+            }
+          }
+          scripts[type] = ss
+        }
+
+        var bs = ss[bid]
+        if (bs == null) {
+          bs = {
+            pre: { // 可能有 id
+              script: '' // index.html 中 v-model 绑定，不能为 null
+            },
+            post: {
+              script: ''
+            }
+          }
+          ss[bid] = bs
+        }
+        var pre = bs.pre
+        if (pre == null) {
+          pre = {
+            script: ''
+          }
+          bs.pre = pre
+        }
+        if (pre.script == null) {
+          pre.script = ''
+        }
+
+        var post = bs.post
+        if (post == null) {
+          post = {
+            script: ''
+          }
+          bs.post = post
+        }
+        if (post.script == null) {
+          post.script = ''
+        }
+
+        this.scriptBelongId = bid
+      },
+      changeScriptPriority: function (isPre) {
+        this.isPreScript = isPre == true
+        this.changeScriptType(this.scriptType)
+      },
+
       /**
        * 删除注释
        */
@@ -4113,7 +4889,7 @@
 
       /**发送请求
        */
-      send: function(isAdminOperation, callback) {
+      send: function(isAdminOperation, callback, caseScript_, accountScript_, globalScript_, ignorePreScript) {
         if (this.isTestCaseShow) {
           alert('请先输入请求内容！')
           return
@@ -4245,8 +5021,253 @@
       },
 
       //请求
-      request: function (isAdminOperation, type, url, req, header, callback) {
+      request: function (isAdminOperation, type, url, req, header, callback, caseScript_, accountScript_, globalScript_, ignorePreScript) {
         this.isLoading = true
+
+        const isEnvCompare = this.isEnvCompareEnabled
+
+        const scripts = (isAdminOperation || caseScript_ == null ? null : this.scripts) || {}
+        const globalScript = (isAdminOperation ? null : (globalScript_ != null ? globalScript_ : (scripts.global || {})[0])) || {}
+        const accountScript = (isAdminOperation ? null : (accountScript_ != null ? accountScript_ : (scripts.account || {})[this.getCurrentAccountId() || 0])) || {}
+        const caseScript = (isAdminOperation ? null : caseScript_) || {}
+
+        var evalPostScript = function () {}
+
+        var sendRequest = function (isAdminOperation, type, url, req, header, callback) {
+          // axios.defaults.withcredentials = true
+          axios({
+            method: (type == REQUEST_TYPE_PARAM ? 'get' : 'post'),
+            url: (isDelegate
+                ? (
+                  App.server + '/delegate?' + (type == REQUEST_TYPE_GRPC ? '$_type=GRPC&' : '')
+                  + (StringUtil.isEmpty(App.delegateId, true) ? '' : '$_delegate_id=' + App.delegateId + '&') + '$_delegate_url=' + encodeURIComponent(url)
+                ) : (
+                  App.isEncodeEnabled ? encodeURI(url) : url
+                )
+            ),
+            params: (type == REQUEST_TYPE_PARAM || type == REQUEST_TYPE_FORM ? req : null),
+            data: (type == REQUEST_TYPE_JSON || type == REQUEST_TYPE_GRPC ? req : (type == REQUEST_TYPE_DATA ? toFormData(req) : null)),
+            headers: header,  //Accept-Encoding（HTTP Header 大小写不敏感，SpringBoot 接收后自动转小写）可能导致 Response 乱码
+            withCredentials: true, //Cookie 必须要  type == REQUEST_TYPE_JSON
+            // crossDomain: true
+          })
+            .then(function (res) {
+              var postEvalResult = evalPostScript(url, res, null)
+              if (postEvalResult == BREAK_ALL) {
+                return
+              }
+
+              App.isLoading = false
+              res = res || {}
+
+              if (isDelegate) {
+                var hs = res.headers || {}
+                var delegateId = hs['Apijson-Delegate-Id'] || hs['apijson-delegate-id']
+
+                if (delegateId != null) {
+                  if (isEnvCompare) {
+                    if (delegateId != App.otherEnvDelegateId) {
+                      App.otherEnvDelegateId = delegateId
+                      App.saveCache(App.server, 'otherEnvDelegateId', delegateId)
+                    }
+                  } else {
+                    if (delegateId != App.delegateId) {
+                      App.delegateId = delegateId
+                      App.saveCache(App.server, 'delegateId', delegateId)
+                    }
+                  }
+                }
+              }
+
+              //any one of then callback throw error will cause it calls then(null)
+              // if ((res.config || {}).method == 'options') {
+              //   return
+              // }
+              log('send >> success:\n' + JSON.stringify(res.data, null, '    '))
+
+              //未登录，清空缓存
+              if (res.data != null && res.data.code == 407) {
+                // alert('request res.data != null && res.data.code == 407 >> isAdminOperation = ' + isAdminOperation)
+                if (isAdminOperation) {
+                  // alert('request App.User = {} App.server = ' + App.server)
+
+                  App.clearUser()
+                }
+                else {
+                  // alert('request App.accounts[App.currentAccountIndex].isLoggedIn = false ')
+
+                  if (App.accounts[App.currentAccountIndex] != null) {
+                    App.accounts[App.currentAccountIndex].isLoggedIn = false
+                  }
+                }
+              }
+
+              if (postEvalResult == BREAK_LAST) {
+                return
+              }
+
+              if (callback != null) {
+                callback(url, res, null)
+                return
+              }
+              App.onResponse(url, res, null)
+            })
+            .catch(function (err) {
+              var res = {request: {url: url, headers: header, data: req}}
+
+              var postEvalResult = evalPostScript(url, res, err)
+              if (postEvalResult == BREAK_ALL) {
+                return
+              }
+
+              App.isLoading = false
+
+              log('send >> error:\n' + err)
+              if (isAdminOperation) {
+                App.delegateId = null
+              }
+
+              if (postEvalResult == BREAK_LAST) {
+                return
+              }
+
+              if (callback != null) {
+                callback(url, res, err)
+                return
+              }
+
+              if (typeof App.autoTestCallback == 'function') {
+                App.autoTestCallback('Error when testing: ' + err + '.\nurl: ' + url + ' \nrequest: \n' + JSON.stringify(req, null, '    '), err)
+              }
+
+              App.onResponse(url, {request: {url: url, headers: header, data: req}}, err)
+            })
+        }
+
+        var evalScript = isAdminOperation || caseScript_ == null ? function () {} : function (isPre, code, res, err) {
+          var logger = console.log
+          console.log = function(msg) {
+            logger(msg)
+            vOutput.value = StringUtil.get(msg)
+          }
+
+          App.view = 'output'
+          vOutput.value = ''
+
+          try {
+//             var s = `(function () {
+// var App = ` + App + `;
+//
+// var type = ` + type + `;
+// var url = ` + url + `;
+// var req = ` + (req == null ? null : JSON.stringify(req)) + `;
+// var header = ` + (header == null ? null : JSON.stringify(header)) + `;
+//
+// ` + (isPre ? '' : `
+// // var res = ` + (res == null ? null : JSON.stringify(res)) + `;
+// var data = ` + (res == null || res.data == null ? null : JSON.stringify(res.data)) + `;
+// var err = ` + (err == null ? null : JSON.stringify(err)) + `;
+//
+// `) + code + `
+//           })()`
+//
+//             eval(s)
+
+            var isTest = false;
+            var data = res == null ? null : res.data
+            var result = eval(code)
+            console.log = logger
+            return result
+          }
+          catch (e) {
+            console.log(e);
+            console.log = logger
+
+            App.isLoading = false
+            // TODO if (isPre) {
+            App.view = 'error'
+            App.error = {
+              msg: '执行脚本报错：\n' + e.message
+            }
+
+            if (callback != null) {
+              callback(url, res, e)
+            } else {
+              // catch 中也 evalScript 导致死循环
+              // if (isPre != true) {
+              //   throw e
+              // }
+
+              // TODO 右侧底部新增断言列表
+              App.onResponse(url, null, new Error('执行脚本报错：\n' + e.message)) // this.onResponse is not a function
+              // callback = function (url, res, err) {}  // 仅仅为了后续在 then 不执行 onResponse
+            }
+          }
+
+          return BREAK_ALL
+        }
+
+        // const preScript = function () {
+        //   if (isAdminOperation) {
+        //     return
+        //   }
+
+          var preScript = ''
+
+          var globalPreScript = isAdminOperation || ignorePreScript || caseScript_ == null ? null : StringUtil.trim((globalScript.pre || {}).script)
+          if (StringUtil.isNotEmpty(globalPreScript, true)) {
+            preScript += globalPreScript + '\n\n' // evalScript(true, globalPreScript)
+          }
+
+          var accountPreScript = isAdminOperation || ignorePreScript || caseScript_ == null ? null : StringUtil.trim((accountScript.pre || {}).script)
+          if (StringUtil.isNotEmpty(accountPreScript, true)) {
+            preScript += accountPreScript + '\n\n' // evalScript(true, accountPreScript)
+          }
+
+          var casePreScript = isAdminOperation || ignorePreScript || caseScript_ == null ? null : StringUtil.trim((caseScript.pre || {}).script)
+          if (StringUtil.isNotEmpty(casePreScript, true)) {
+            preScript += casePreScript + '\n\n' // evalScript(true, casePreScript)
+          }
+
+          var preEvalResult = null;
+          if (StringUtil.isNotEmpty(preScript, true)) {
+            preEvalResult = evalScript(true, preScript)
+          }
+
+        // }
+
+        evalPostScript = isAdminOperation || caseScript_ == null ? function () {} : function (url, res, err) {
+          var postScript = ''
+
+          var casePostScript = StringUtil.trim((caseScript.post || {}).script)
+          if (StringUtil.isNotEmpty(casePostScript, true)) {
+            postScript += casePostScript + '\n\n' // evalScript(false, casePostScript, res, err)
+          }
+
+          var accountPostScript = StringUtil.trim((accountScript.post || {}).script)
+          if (StringUtil.isNotEmpty(accountPostScript, true)) {
+            postScript += accountPostScript + '\n\n' // evalScript(false, accountPostScript, res, err)
+          }
+
+          var globalPostScript = StringUtil.trim((globalScript.post || {}).script)
+          if (StringUtil.isNotEmpty(globalPostScript, true)) {
+            postScript += globalPostScript + '\n\n' // evalScript(false, globalPostScript, res, err)
+          }
+
+          if (StringUtil.isNotEmpty(postScript, true)) {
+            if (StringUtil.isNotEmpty(preScript, true)) { // 如果有副作用代码，则通过判断 if (isPre) {..} 在里面执行
+              postScript = preScript + '\n\n// request >>>>>>>>>>>>>>>>>>>>>>>>>> response \n\n' + postScript
+            }
+
+            return evalScript(false, postScript, res, err)
+          }
+
+          return null;
+        }
+
+        if (preEvalResult == BREAK_ALL) {
+          return
+        }
 
         type = type || REQUEST_TYPE_JSON
         url = StringUtil.noBlank(url)
@@ -4266,22 +5287,23 @@
           }
         } else if (IS_NODE) {
           var curUser = isAdminOperation ? this.User : this.getCurrentAccount()
-          if (curUser != null && curUser.cookie != null) {
+          if (curUser != null && curUser[isEnvCompare ? 'phone' : 'cookie'] != null) {
             if (header == null) {
               header = {}
             }
 
             // Node 环境内通过 headers 设置 Cookie 无效
-            header.Cookie = curUser.cookie
+            header.Cookie = isEnvCompare ? this.otherEnvCookieMap[curUser.phone] : curUser.cookie
             document.cookie = header.Cookie
           }
         }
 
-        if (isDelegate && this.delegateId != null && (header == null || header['Apijson-Delegate-Id'] == null)) {
+        var delegateId = isEnvCompare ? this.otherEnvDelegateId : this.delegateId
+        if (isDelegate && delegateId != null && (header == null || header['Apijson-Delegate-Id'] == null)) {
           if (header == null) {
             header = {};
           }
-          header['Apijson-Delegate-Id'] = this.delegateId
+          header['Apijson-Delegate-Id'] = delegateId
         }
 
         var curUser = isAdminOperation ? null : this.getCurrentAccount()
@@ -4316,84 +5338,11 @@
           // JSON.parse = CircularJSON.parse;
         }
 
-        // axios.defaults.withcredentials = true
-        axios({
-          method: (type == REQUEST_TYPE_PARAM ? 'get' : 'post'),
-          url: (isDelegate
-              ? (
-                this.server + '/delegate?' + (type == REQUEST_TYPE_GRPC ? '$_type=GRPC&' : '')
-                + (StringUtil.isEmpty(this.delegateId, true) ? '' : '$_delegate_id=' + this.delegateId + '&') + '$_delegate_url=' + encodeURIComponent(url)
-              ) : (
-                this.isEncodeEnabled ? encodeURI(url) : url
-              )
-          ),
-          params: (type == REQUEST_TYPE_PARAM || type == REQUEST_TYPE_FORM ? req : null),
-          data: (type == REQUEST_TYPE_JSON || type == REQUEST_TYPE_GRPC ? req : (type == REQUEST_TYPE_DATA ? toFormData(req) : null)),
-          headers: header,  //Accept-Encoding（HTTP Header 大小写不敏感，SpringBoot 接收后自动转小写）可能导致 Response 乱码
-          withCredentials: true, //Cookie 必须要  type == REQUEST_TYPE_JSON
-          // crossDomain: true
-        })
-          .then(function (res) {
-            App.isLoading = false
-            res = res || {}
+        if (preEvalResult == BREAK_LAST) {
+          return
+        }
 
-            if (isDelegate) {
-              var hs = res.headers || {}
-              var delegateId = hs['Apijson-Delegate-Id'] || hs['apijson-delegate-id']
-              if (delegateId != null && delegateId != App.delegateId) {
-                App.delegateId = delegateId
-                App.saveCache(App.server, 'delegateId', delegateId)
-              }
-            }
-
-	          //any one of then callback throw error will cause it calls then(null)
-            // if ((res.config || {}).method == 'options') {
-            //   return
-            // }
-            log('send >> success:\n' + JSON.stringify(res.data, null, '    '))
-
-            //未登录，清空缓存
-            if (res.data != null && res.data.code == 407) {
-              // alert('request res.data != null && res.data.code == 407 >> isAdminOperation = ' + isAdminOperation)
-              if (isAdminOperation) {
-                // alert('request App.User = {} App.server = ' + App.server)
-
-                App.clearUser()
-              }
-              else {
-                // alert('request App.accounts[App.currentAccountIndex].isLoggedIn = false ')
-
-                if (App.accounts[App.currentAccountIndex] != null) {
-                  App.accounts[App.currentAccountIndex].isLoggedIn = false
-                }
-              }
-            }
-
-            if (callback != null) {
-              callback(url, res, null)
-              return
-            }
-            App.onResponse(url, res, null)
-          })
-          .catch(function (err) {
-            App.isLoading = false
-
-            log('send >> error:\n' + err)
-            if (isAdminOperation) {
-              App.delegateId = null
-            }
-
-            if (callback != null) {
-              callback(url, {request: {url: url, headers: header, data: req}}, err)
-              return
-            }
-
-            if (typeof App.autoTestCallback == 'function') {
-              App.autoTestCallback('Error when testing: ' + err + '.\nurl: ' + url + ' \nrequest: \n' + JSON.stringify(req, null, '    '), err)
-            }
-
-            App.onResponse(url, {request: {url: url, headers: header, data: req}}, err)
-          })
+        sendRequest(isAdminOperation, type, url, req, header, callback)
       },
 
 
@@ -4412,7 +5361,11 @@
 
         if (err != null) {
           if (IS_BROWSER) {
-            vOutput.value = "Response:\nurl = " + url + "\nerror = " + err.message;
+            // vOutput.value = "Response:\nurl = " + url + "\nerror = " + err.message;
+            this.view = 'error';
+            this.error = {
+              msg: "Response:\nurl = " + url + "\nerror = " + err.message + ERR_MSG
+            }
           }
         }
         else {
@@ -4696,6 +5649,12 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
        */
       doOnKeyUp: function (event, type, isFilter, item) {
         var keyCode = event.keyCode ? event.keyCode : (event.which ? event.which : event.charCode);
+        if (type == 'option') {
+          if (keyCode == 13) {
+            this.selectInput(item);
+          }
+          return
+        }
 
         var obj = event.srcElement ? event.srcElement : event.target;
         if ($(obj).attr('id') == 'vUrl') {
@@ -4965,7 +5924,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
             + '\nAPIJSON 官方网站: https://github.com/APIJSON/apijson.cn '
             + '\nAPIJSON -Java版: https://github.com/Tencent/APIJSON '
             + '\nAPIJSON - C# 版: https://github.com/liaozb/APIJSON.NET '
-            + '\nAPIJSON - Go 版: https://github.com/j2go/apijson-go '
+            + '\nAPIJSON - Go 版: https://github.com/glennliao/apijson-go '
             + '\nAPIJSON - PHP版: https://github.com/kvnZero/hyperf-APIJSON '
             + '\nAPIJSON -Node版: https://github.com/kevinaskin/apijson-node '
             + '\nAPIJSON -Python: https://github.com/zhangchunlin/uliweb-apijson '
@@ -4987,8 +5946,8 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
         vOutput.value = (this.isTestCaseShow ? '' : output) + (
           '\n\n\n## 文档 \n\n 通用文档见 [APIJSON通用文档](https://github.com/Tencent/APIJSON/blob/master/Document.md#3.2) \n### 数据字典\n自动查数据库表和字段属性来生成 \n\n' + d
           + '<h3 align="center">关于</h3>'
-          + '<p align="center">SQLAuto-智能零代码 SQL 数据库测试 工具'
-          + '<br>机器学习零代码测试 SQL、任意增删改查、任意 SQL 模板变量、一键批量生成'
+          + '<p align="center">SQLAuto-智能零代码数据库测试工具'
+          + '<br>机器学习零代码测试、任意模板变量增删改查、一键批量生成测试数据'
           + '<br>由 <a href="https://github.com/TommyLemon/SQLAuto" target="_blank">SQLAuto(前端网页工具)</a>, <a href="https://github.com/Tencent/APIJSON" target="_blank">APIJSON(后端接口服务)</a> 等提供技术支持'
           + '<br>遵循 <a href="http://www.apache.org/licenses/LICENSE-2.0" target="_blank">Apache-2.0 开源协议</a>'
           + '<br>Copyright &copy; 2022-' + new Date().getFullYear() + ' Tommy Lemon'
@@ -5053,22 +6012,22 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
               '@column': 'value:table_comment'
             },
             "join": isNotTSQL ? null : {
-            	"&/AllTableComment": {
-            		  'table_name$': search,
-              		'table_comment$': search,
-              		'@combine': search == null ? null : 'table_name$,table_comment$',
-            	}
+              "&/AllTableComment": {
+                'table_name$': search,
+                'table_comment$': search,
+                '@combine': search == null ? null : 'table_name$,table_comment$',
+              }
             },
-    		    "AllTable": isNotTSQL ? null : {
-    		        "@order": "TABLE_NAME+",
-    		        "@column": "TABLE_NAME:table_name",
-    		        'TABLE_NAME{}@': 'sql'
-    		    },
-    		    "AllTableComment": isNotTSQL ? null : {
-    		        "TABLE_TYPE": "TABLE",
-    		        "TABLE_NAME@": "/AllTable/TABLE_NAME",
-    		        "@column": "COMMENTS:table_comment"
-    		    },
+            "AllTable": isNotTSQL ? null : {
+              "@order": "TABLE_NAME+",
+              "@column": "TABLE_NAME:table_name",
+              'TABLE_NAME{}@': 'sql'
+            },
+            "AllTableComment": isNotTSQL ? null : {
+              "TABLE_TYPE": "TABLE",
+              "TABLE_NAME@": "/AllTable/TABLE_NAME",
+              "@column": "COMMENTS:table_comment"
+            },
             '[]': {
               'count': 0,
               'Column': isTSQL ? null : {
@@ -5099,14 +6058,14 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
                 '@column': 'value:column_comment'
               },
               "AllColumn": isNotTSQL ? null : {
-    		        "TABLE_NAME@": "[]/AllTable/table_name",
-    		        "@column": "COLUMN_NAME:column_name,DATA_TYPE:column_type"
-    		      },
-    		      "AllColumnComment": isNotTSQL ? null : {
-    		        "TABLE_NAME@": "[]/AllTable/table_name",
-    		        "COLUMN_NAME@": "/AllColumn/column_name",
-    		        "@column": "COMMENTS:column_comment"
-    		      }
+                "TABLE_NAME@": "[]/AllTable/table_name",
+                "@column": "COLUMN_NAME:column_name,DATA_TYPE:column_type"
+              },
+              "AllColumnComment": isNotTSQL ? null : {
+                "TABLE_NAME@": "[]/AllTable/table_name",
+                "COLUMN_NAME@": "/AllColumn/column_name",
+                "@column": "COMMENTS:column_comment"
+              }
             }
           }
         }, {}, function (url, res, err) {
@@ -5138,14 +6097,11 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
               log('getDoc  [] = \n' + format(JSON.stringify(list)));
             }
 
-            var table;
-            var columnList;
-            var column;
             for (var i = 0; i < list.length; i++) {
-              item = list[i];
+              var item = list[i];
 
               //Table
-              table = item == null ? null : (App.database != 'SQLSERVER' ? item.Table : item.SysTable);
+              var table = item == null ? null : (App.database != 'SQLSERVER' ? item.Table : item.SysTable);
               if (table == null) {
                 continue;
               }
@@ -5178,7 +6134,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
               doc += '\n\n 名称  |  类型  |  最大长度  |  默认值  |  详细说明' +
                 ' \n --------  |  ------------  |  ------------  |  ------------  |  ------------ ';
 
-              columnList = item['[]'];
+              var columnList = item['[]'];
               if (columnList == null) {
                 continue;
               }
@@ -5186,19 +6142,16 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
                 log('getDoc [] for ' + i + ': columnList = \n' + format(JSON.stringify(columnList)));
               }
 
-              var name;
-              var type;
-              var length;
               for (var j = 0; j < columnList.length; j++) {
-                column = (columnList[j] || {})[App.database != 'SQLSERVER' ? 'Column' : 'SysColumn'];
-                name = column == null ? null : column.column_name;
+                var column = (columnList[j] || {})[App.database != 'SQLSERVER' ? 'Column' : 'SysColumn'];
+                var name = column == null ? null : column.column_name;
                 if (name == null) {
                   continue;
                 }
 
                 column.column_type = CodeUtil.getColumnType(column, App.database);
-                type = CodeUtil.getType4Language(App.language, column.column_type, false);
-                length = CodeUtil.getMaxLength(column.column_type);
+                var type = CodeUtil.getType4Language(App.language, column.column_type, false);
+                var length = CodeUtil.getMaxLength(column.column_type);
 
                 if (DEBUG) {
                   log('getDoc [] for j=' + j + ': column = \n' + format(JSON.stringify(column)));
@@ -5337,28 +6290,117 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
 //      log('getDoc  callback(doc); = \n' + doc);
       },
 
-      getTableKey(database) {
+      getTableKey: function(database) {
         database = database || this.database
         return this.database == 'SQLSERVER' ? 'SysTable' : (['ORALCE', 'DAMENG'].indexOf(database) >= 0 ? 'AllTable' : 'Table')
       },
-      getColumnKey(database) {
+      getColumnKey: function(database) {
         database = database || this.database
         return this.database == 'SQLSERVER' ? 'SysColumn' : (['ORALCE', 'DAMENG'].indexOf(database) >= 0 ? 'AllColumn' : 'Column')
       },
-      getTableObj(tableIndex) {
+      getTableObj: function(tableIndex) {
         var list = docObj == null ? null : docObj['[]']
         var item = list == null ? null : list[tableIndex]
         return item == null ? null : item[this.getTableKey()];
       },
-      getColumnList(tableIndex) {
+      getColumnList: function(tableIndex) {
         var list = docObj == null ? null : docObj['[]']
         var item = list == null ? null : list[tableIndex]
         return item == null ? null : item['[]']
       },
-      getColumnObj(columnList, columnIndex) {
+      getColumnListWithModelName: function(modelName, schemaName) {
+        var list = docObj == null ? null : docObj['[]']
+        if (list != null) {
+          for (var i = 0; i < list.length; i++) {
+            var table = this.getTableObj(i)
+            if (table != null && this.getModelName(i) == modelName
+              && (schemaName == null || table.table_schema == schemaName)) {
+              return list[i]['[]']
+            }
+          }
+        }
+        return null
+      },
+      getTableByName: function(tableName, schemaName) {
+        var list = docObj == null ? null : docObj['[]']
+        if (list != null) {
+          for (var i = 0; i < list.length; i++) {
+            var table = this.getTableObj(i)
+            if (table != null && table.table_name == tableName
+              && (schemaName == null || table.table_schema == schemaName)) {
+              return table
+            }
+          }
+        }
+
+        return null
+      },
+      getTableByModelName: function(modelName, schemaName) {
+        var list = docObj == null ? null : docObj['[]']
+        if (list != null) {
+          for (var i = 0; i < list.length; i++) {
+            var table = this.getTableObj(i)
+            if (table != null && this.getModelName(i) == modelName
+              && (schemaName == null || table.table_schema == schemaName)) {
+              return table
+            }
+          }
+        }
+        return null
+      },
+      getColumnTypeWithModelName: function(columnName, modelName, schemaName) {
+        var columnList = this.getColumnListWithModelName(modelName, schemaName)
+        if (columnList != null) {
+          for (var j = 0; j < columnList.length; j++) {
+            var column = this.getColumnObj(columnList, j)
+            if (column != null && column.column_name == columnName) {
+              return column
+            }
+          }
+        }
+        return null
+      },
+      getColumnObj: function(columnList, columnIndex) {
         return columnList == null ? null : (columnList[columnIndex] || {})[this.getColumnKey()];
       },
-      getSchemaName(tableIndex) {
+      getAccessObj: function(index) {
+        var list = docObj == null ? null : docObj['Access[]']
+        return list == null ? null : list[index];
+      },
+      getFunctionObj: function(index) {
+        var list = docObj == null ? null : docObj['Function[]']
+        return list == null ? null : list[index];
+      },
+      getFunctionByName: function(functionName) {
+        var list = docObj == null ? null : docObj['Function[]']
+        if (list != null) {
+          for (var i = 0; i < list.length; i++) {
+            var fun = this.getFunctionObj(i)
+            if (fun != null && fun.name == functionName) {
+              return fun
+            }
+          }
+        }
+        return null
+      },
+      getRequestObj: function(index) {
+        var list = docObj == null ? null : docObj['Request[]']
+        return list == null ? null : list[index];
+      },
+      getRequestBy: function(method, tag, version) {
+        var list = docObj == null ? null : docObj['Request[]']
+        if (list != null) {
+          for (var i = 0; i < list.length; i++) {
+            var req = this.getRequestObj(i)
+            if (req != null && req.method == method && req.tag == tag && (
+              version == null || req.version == version)) {
+              return req
+            }
+          }
+        }
+        return null
+      },
+      getSchemaName: function(tableIndex) {
         var table = this.getTableObj(tableIndex)
         var sch = table == null ? null : table.table_shema
         if (StringUtil.isNotEmpty(sch)) {
@@ -5368,11 +6410,11 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
         var schemas = StringUtil.isEmpty(this.schema, true) ? null : StringUtil.split(this.schema)
         return schemas == null || schemas.length != 1 ? null : this.schema
       },
-      getTableName(tableIndex) {
+      getTableName: function(tableIndex) {
         var table = this.getTableObj(tableIndex)
         return table == null ? '' : table.table_name
       },
-      getColumnName(columnList, columnIndex) {
+      getColumnName: function(columnList, columnIndex) {
         var column = this.getColumnObj(columnList, columnIndex)
         return column == null ? '' : column.column_name
       },
@@ -5603,92 +6645,213 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
       },
 
       /**处理请求结构
-       * @param obj
-       * @param tag
-       * @return {*}
        */
-      getStructure: function (obj, tag) {
+      getStructure: function (isDemo, name, obj, method, tag, version, unwrap) {
         if (obj == null) {
           return null;
         }
 
-        log('getStructure  tag = ' + tag + '; obj = \n' + format(JSON.stringify(obj)));
+        if (DEBUG) {
+          log('getStructure  tag = ' + tag + '; version = ' + version + '; isDemo = ' + isDemo + '; obj = \n' + format(obj));
+        }
+
+        method = method == null ? 'GET' : method.trim().toUpperCase()
+
+        var isArrayKey = tag != null && tag.endsWith('[]');
+        var isMultiArrayKey = isArrayKey && tag.endsWith(":[]")
+        var isTableKey = false
+        var tableName = tag
+        if (tag != null) { //补全省略的Table
+          var key = isArrayKey ? tag.substring(0, tag.length - (tag.endsWith(':[]') ? 3 : 2)) : tag;
+          if (this.isTableKey(key)) {
+            isTableKey = true
+            tableName = key
+            // name = key
+          }
+        }
+
+        var newObj = {}
 
         if (obj instanceof Array) {
           for (var i = 0; i < obj.length; i++) {
-            obj[i] = this.getStructure(obj[i]);
+            newObj[i] = this.getStructure(isDemo, i + '', obj[i], method);
           }
         }
         else if (obj instanceof Object) {
-          var v;
-          var nk;
+          var refuseKeys = null
+
           for (var k in obj) {
             if (k == null || k == '' || k == 'INSERT' || k == 'REMOVE' || k == 'REPLACE' || k == 'UPDATE') {
-              delete obj[k];
               continue;
             }
 
-            v = obj[k];
+            var v = obj[k];
             if (v == null) {
-              delete obj[k];
               continue;
             }
 
-            if (k == 'DISALLOW') {
-              nk = '不能传';
-            }
-            else if (k == 'NECESSARY') {
-              nk = '必须传';
-            }
-            else if (k == 'UNIQUE') {
-              nk = '不重复';
-            }
-            else if (k == 'VERIFY') {
-              nk = '满足条件';
-            }
-            else if (k == 'TYPE') {
-              nk = '满足类型';
+            var nk = k;
+
+            if (isDemo) {
+              nk = null
+              if (k == 'REFUSE') {
+                refuseKeys = StringUtil.isEmpty(v, true) ? null : StringUtil.split(v)
+              }
+              else if (k == 'MUST' || k == 'UNIQUE') {
+                var ks = StringUtil.isEmpty(v, true) ? null : StringUtil.split(v)
+                if (ks != null) {
+                  for (var j = 0; j < ks.length; j++) {
+                    var kj = ks[j]
+                    newObj[kj] = this.generateValue(CodeUtil.getType4Language(CodeUtil.LANGUAGE_JAVA_SCRIPT
+                      , CodeUtil.getColumnType(this.getColumnTypeWithModelName(kj, tableName), this.database)), kj)
+                  }
+                }
+              }
+              else if (k == 'VERIFY') { // 后续会用数据字典填空
+                nk = null
+                // for (var kj in v) { // 还得把功能符去掉 {} $ > <= ...
+                //   newObj[kj] = this.generateValue(CodeUtil.getType4Language(CodeUtil.LANGUAGE_JAVA_SCRIPT
+                //     , CodeUtil.getColumnType(this.getColumnTypeWithModelName(kj, tableName), this.database)), kj)
+                // }
+              }
+              else if (k == 'TYPE') {
+                for (var kj in v) {
+                  newObj[kj] = this.generateValue(CodeUtil.getType4Language(CodeUtil.LANGUAGE_JAVA_SCRIPT, v[kj]), kj)
+                }
+              }
+              else {
+                nk = k
+              }
             }
             else {
-              nk = null;
-            }
-
-            if (v instanceof Object) {
-              v = this.getStructure(v);
-            }
-            else if (v === '!') {
-              v = '非必须传的字段';
+              if (k == 'REFUSE') {
+                nk = '不能传';
+              } else if (k == 'MUST') {
+                nk = '必须传';
+              } else if (k == 'UNIQUE') {
+                nk = '不重复';
+              } else if (k == 'VERIFY') {
+                nk = '满足条件';
+              } else if (k == 'TYPE') {
+                nk = '满足类型';
+              } else {
+                nk = k;
+              }
             }
 
             if (nk != null) {
-              obj[nk] = v;
-              delete obj[k];
+              if (v instanceof Object && (v instanceof Array == false)) {
+                v = this.getStructure(isDemo, nk, v, method);
+              }
+              else if (v === '!') {
+                v = '非必须传的字段';
+              }
+
+              if (v != null) {
+                newObj[nk] = v;
+              }
             }
           }
 
-          if (tag != null && obj[tag] == null) { //补全省略的Table
-            var isArrayKey = tag.endsWith(":[]");  //JSONObject.isArrayKey(tag);
-            var key = isArrayKey ? tag.substring(0, tag.length - 3) : tag;
+          var isPutOrDel = method == 'PUT' || method == 'DELETE'
+          var isPostOrPutMulti = isMultiArrayKey && (method == 'POST' || method == 'PUT')
+          var isGetOrGetsMulti = isArrayKey && (method == 'GET' || method == 'GETS')
+          var mustHasKey = tableName + (isPostOrPutMulti || isGetOrGetsMulti ? '[]' : '')
+          var isFulfill = name == null && isTableKey && (isPostOrPutMulti || newObj[mustHasKey] == null)
+          if (isFulfill && (isPostOrPutMulti || ! isArrayKey)) {
+            name = tableName
+          }
 
-            if (this.isTableKey(key)) {
-              if (isArrayKey) { //自动为 tag = Comment:[] 的 { ... } 新增键值对 "Comment[]":[] 为 { "Comment[]":[], ... }
-                obj[key + "[]"] = [];
+          if (isDemo && this.isTableKey(name) && (refuseKeys == null || refuseKeys.indexOf('!') < 0)) {
+            var columnList = this.getColumnListWithModelName(name)
+            if (columnList != null) {
+              var s = ''
+              for (var i = 0; i < columnList.length; i++) {
+                var column = this.getColumnObj(columnList, i)
+                var cn = column == null ? null : column.column_name
+
+                if (cn == null || cn.startsWith('_') || (method == 'POST' && cn.toLowerCase() == 'id') || (refuseKeys != null && refuseKeys.indexOf(cn) >= 0)) {
+                  continue
+                }
+
+                if (method == 'GET' || method == 'GETS') {
+                  s += (i <= 0 ? '' : ',') + cn
+                } else {
+                  var nv = this.generateValue(CodeUtil.getType4Language(CodeUtil.LANGUAGE_JAVA_SCRIPT, CodeUtil.getColumnType(column, this.database)), cn)
+                  if (nv != null || newObj[cn] == null) {
+                    newObj[cn] = nv
+                  }
+                }
               }
-              else { //自动为 tag = Comment 的 { ... } 包一层为 { "Comment": { ... } }
-                var realObj = {};
-                realObj[tag] = obj;
-                obj = realObj;
+            }
+
+            if (method == 'GET' || method == 'GETS') {
+              newObj['@column'] = s
+            }
+          }
+
+          if (isFulfill) { //补全省略的Table
+            var realObj = {};
+            if (isArrayKey) { //自动为 tag = Comment:[] 的 { ... } 新增键值对 "Comment[]":[] 为 { "Comment[]":[], ... }
+              if (isPostOrPutMulti) {
+                var reqObj = isDemo ? this.getRequestBy(method, tableName) : null
+                var childStruct = reqObj == null ? null : reqObj.structure
+                if (childStruct != null && childStruct[tableName] != null) {
+                  childStruct = childStruct[tableName]
+                }
+
+                newObj = childStruct == null ? newObj : Object.assign(
+                  this.getStructure(isDemo, null, childStruct, reqObj.method, null, null, true), newObj
+                )
+
+                delete newObj[mustHasKey]
+                realObj[mustHasKey] = isDemo ? [newObj, newObj] : [newObj];
               }
+              else if (unwrap || isPutOrDel) {
+                if (isDemo && isPutOrDel && newObj['id{}'] == null) {
+                  newObj['id{}'] = [
+                    1,
+                    2,
+                    4,
+                    12,
+                    470,
+                    82011,
+                    82012
+                  ]
+                }
+                realObj[mustHasKey] = newObj;
+              }
+              else {
+                realObj[mustHasKey] = newObj
+              }
+              newObj = realObj
+            }
+            else if (unwrap != true) { //自动为 tag = Comment 的 { ... } 包一层为 { "Comment": { ... } }
+              if (isPutOrDel) {
+                if (isDemo && newObj.id == null) {
+                  newObj.id = 1
+                }
+              }
+
+              realObj[mustHasKey] = newObj;
+              newObj = realObj;
             }
           }
 
         }
 
-        obj.tag = tag; //补全tag
+        if (tag != null && unwrap != true) {
+          newObj.tag = tag; //补全tag
+        }
+        if (version != null && unwrap != true) {
+          newObj.version = version;
+        }
 
-        log('getStructure  return obj; = \n' + format(JSON.stringify(obj)));
+        if (DEBUG) {
+          log('getStructure  return newObj = \n' + format(newObj));
+        }
 
-        return obj;
+        return newObj;
       },
 
       /**判断key是否为表名，用CodeUtil里的同名函数会在Safari上报undefined
@@ -5732,8 +6895,58 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
         this.isMLEnabled = enable
         this.testProcess = enable ? '机器学习:已开启' : '机器学习:已关闭'
         this.saveCache(this.server, 'isMLEnabled', enable)
+        // if (enable) {
+        //   this.isEnvCompareEnabled = false
+        //   this.saveCache(this.server, 'isEnvCompareEnabled', this.isEnvCompareEnabled)
+        // }
         this.remotes = null
         this.showTestCase(true, false)
+      },
+
+      onClickTestScript() {
+        var logger = console.log
+        console.log = function(msg) {
+          logger(msg)
+          vOutput.value = StringUtil.get(msg)
+        }
+
+        this.view = 'output'
+        vOutput.value = ''
+
+        try {
+          var isTest = true
+          var isPre = this.isPreScript
+
+          var isAdminOperation = false
+          var type = this.type
+          var url = this.getUrl()
+          var req = this.getRequest(vInput.value, {})
+          var header = this.getHeader(vHeader.value)
+          var callback = null
+
+          var data = isPre ? undefined : (this.jsoncon == null ? null : JSON.parse(this.jsoncon))
+          var res = isPre ? undefined : {
+            data: data
+          }
+          var err = isPre ? undefined : null
+
+          var sendRequest = function (isAdminOperation, type, url, req, header, callback) {
+            App.request(isAdminOperation, type, url, req, header, callback)
+          }
+
+          eval(vScript.value);
+        }
+        catch(e) {
+          console.log(e);
+          console.log = logger
+
+          this.view = 'error'
+          this.error = {
+            msg: '执行脚本报错：\n' + e.message
+          }
+        }
+
+        console.log = logger
       },
 
       /**参数注入，动态替换键值对
@@ -5823,16 +7036,18 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
 
             App[testSubList ? 'currentRandomSubIndex' : 'currentRandomIndex'] = index
             this.testRandomSingle(show, false, itemAllCount > 1 && ! testSubList, item, this.type, url, json, {}, isCross, function (url, res, err) {
+              var data = null
               if (res instanceof Object) {  // 可能通过 onTestResponse 返回的是 callback(true, 18, null)
+                data = res.data
                 try {
                   App.onResponse(url, res, err)
-                  App.log('test  App.request >> res.data = ' + JSON.stringify(res.data, null, '  '))
+                  App.log('test  App.request >> res.data = ' + (data == null ? 'null' : JSON.stringify(data, null, '  ')))
                 } catch (e) {
                   App.log('test  App.request >> } catch (e) {\n' + e.message)
                 }
               }
 
-              App.compareResponse(allCount, list, index, item, res.data, true, App.currentAccountIndex, false, err, null, isCross, callback)
+              App.compareResponse(allCount, list, index, item, data, true, App.currentAccountIndex, false, err, null, isCross, callback)
               return true
             })
           }
@@ -5844,6 +7059,32 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
        */
       testRandomSingle: function (show, testList, testSubList, item, type, url, sql, header, isCross, callback) {
         item = item || {}
+
+        // 保证能调用自定义函数等 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+        const scripts = this.scripts || {}
+        const globalScript = (scripts.global || {})[0] || {}
+        const accountScript = (scripts.account || {})[this.getCurrentAccountId() || 0] || {}
+        const caseScript = (scripts.case || {})[this.getCurrentDocumentId() || 0] || {}
+
+        var preScript = ''
+
+        var globalPreScript = StringUtil.trim((globalScript.pre || {}).script)
+        if (StringUtil.isNotEmpty(globalPreScript, true)) {
+          preScript += globalPreScript + '\n\n'
+        }
+
+        var accountPreScript = StringUtil.trim((accountScript.pre || {}).script)
+        if (StringUtil.isNotEmpty(accountPreScript, true)) {
+          preScript += accountPreScript + '\n\n'
+        }
+
+        var casePreScript = StringUtil.trim((caseScript.pre || {}).script)
+        if (StringUtil.isNotEmpty(casePreScript, true)) {
+          preScript += casePreScript + '\n\n'
+        }
+        // 保证能调用自定义函数等 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
         var random = item.Random = item.Random || {}
         var subs = item['[]'] || []
         var existCount = subs.length
@@ -5910,7 +7151,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
                 }
                 else {
                   // header 目前不是 JSONObject 不适合传参 App.request(false, type, url, constJson, header, cb);
-                  App.request(false, REQUEST_TYPE_JSON, App.server + '/sql/execute', constJson, {}, cb);
+                  App.request(false, REQUEST_TYPE_JSON, App.server + '/sql/execute', constJson, {}, cb, caseScript, null, null, true);
                 }
               }
 
@@ -5927,12 +7168,13 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
                 App.testRandom(false, false, true, count, isCross, callback)
               }
 
-            }
+            },
+            preScript
           );
 
-        }  //for
+        }  // for
 
-    },
+      },
 
       resetParentCount: function (item, cri) {
         cri.totalCount -= item.totalCount
@@ -6051,7 +7293,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
        * @param show
        * @param callback
        */
-      parseRandom: function (sql, config, randomId, generateJSON, generateConfig, generateName, callback) {
+      parseRandom: function (sql, config, randomId, generateJSON, generateConfig, generateName, callback, preScript) {
         sql = this.getRequest(sql, '')
         var sqlLines = sql.split('\n')
         var newSql = ''
@@ -6406,7 +7648,12 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
 
           }
 
-          invoke(eval(toEval), which, p_k, pathKeys, key, lastKeyInPath);
+          var isPre = false; // 避免执行副作用代码 true;
+          var isTest = false;
+          var res = {};
+          var data = res.data;
+          var err = null;
+          invoke(eval(StringUtil.trim(preScript) + '\n' + toEval), which, p_k, pathKeys, key, lastKeyInPath);
 
           // alert('> current = ' + JSON.stringify(current, null, '    '))
         }
@@ -6597,6 +7844,14 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
           this.autoTestCallback(this.testProcess)
         }
 
+        const isMLEnabled = this.isMLEnabled
+        const standardKey = isMLEnabled != true ? 'response' : 'standard'
+
+        const otherEnv = this.otherEnv;
+        const otherBaseUri = this.isEnvCompareEnabled && StringUtil.isNotEmpty(otherEnv, true) ? this.getBaseUrl(otherEnv) : null
+        const isEnvCompare = StringUtil.isNotEmpty(otherBaseUri, true) // 对比自己也行，看看前后两次是否幂等  && otherBaseUrl != baseUrl
+        const apiUrl = this.server + '/sql/execute'
+
         for (var i = 0; i < allCount; i++) {
           const item = list[i]
           const document = item == null ? null : item.Document
@@ -6617,29 +7872,71 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
 
           const index = i
 
-          // var header = null
-          // try {
-          //   header = this.getHeader(document.header)
-          // } catch (e) {
-          //   this.log('test  for ' + i + ' >> try { header = this.getHeader(document.header) } catch (e) { \n' + e.message)
-          // }
+          var hdr = null
+          try {
+            hdr = this.getHeader(document.header)
+          } catch (e) {
+            this.log('test  for ' + i + ' >> try { header = this.getHeader(document.header) } catch (e) { \n' + e.message)
+          }
+          const header = hdr
+          
+          const caseScript = {
+            pre: item['Script:pre'],
+            post: item['Script:post']
+          }
 
-          this.parseRandom(document.sqlauto, document.header, -1, true, false, false, function (randomName, constConfig, constJson) {
-            App.request(false, document.type, App.server + '/sql/execute', Object.assign(constJson, {
-              uri: baseUrl + document.url
+          const type = document.type
+          const curUri = baseUrl + document.url
+          const otherUri = otherBaseUri + document.url
+
+          this.parseRandom(document.sqlauto, document.header, -1
+              , true, false, false, function (randomName, constConfig, constJson) {
+            App.request(false, type, apiUrl, Object.assign(constJson, {
+              uri: isEnvCompare ? otherUri : curUri
             }), {}, function (url, res, err) {
-              try {
-                App.onResponse(url, res, err)
-                App.log('test  App.request >> res.data = ' + JSON.stringify(res.data, null, '  '))
-              } catch (e) {
-                App.log('test  App.request >> } catch (e) {\n' + e.message)
+              if (isEnvCompare != true) {
+                App.compareResponse(allCount, list, index, item, res.data, isRandom, accountIndex, false, err, null, isCross, callback)
+                return
               }
 
-              App.compareResponse(allCount, list, index, item, res.data, isRandom, accountIndex, false, err, null, isCross, callback)
-            })
+              if (callback == null) {
+                try {
+                  App.onResponse(url, res, err)
+                  if (DEBUG) {
+                    App.log('test  App.request >> res.data = ' + JSON.stringify(res.data, null, '  '))
+                  }
+                } catch (e) {
+                  App.log('test  App.request >> } catch (e) {\n' + e.message)
+                }
+              }
+
+              const otherErr = err
+              const rsp = App.removeDebugInfo(res.data)
+              const tr = item.TestRecord || {}
+              tr[standardKey] = JSON.stringify(isMLEnabled ? JSONResponse.updateFullStandard({}, rsp, isMLEnabled) : rsp) // res.data
+              item.TestRecord = tr
+
+              App.request(false, type, apiUrl, Object.assign(constJson, {
+                uri: curUri
+              }), header, function (url, res, err) {
+                if (callback == null) {
+                  try {
+                    App.onResponse(url, res, err)
+                    if (DEBUG) {
+                      App.log('test  App.request >> res.data = ' + JSON.stringify(res.data, null, '  '))
+                    }
+                  } catch (e) {
+                    App.log('test  App.request >> } catch (e) {\n' + e.message)
+                  }
+                }
+
+                App.compareResponse(allCount, list, index, item, res.data, isRandom, accountIndex, false, err || otherErr, null, isCross, callback)
+              }, caseScript)
+
+            }, caseScript)
+
           })
         }
-
       },
 
       getDurationShowString: function (duration) {
@@ -6700,12 +7997,13 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
         }
         else {
           var standardKey = this.isMLEnabled != true ? 'response' : 'standard'
-          var standard = StringUtil.isEmpty(tr[standardKey], true) ? null : JSON.parse(tr[standardKey])
+          var rsp = tr[standardKey]
+          var standard = typeof rsp != 'string' ? rsp : (StringUtil.isEmpty(rsp, true) ? null : JSON.parse(rsp))
 
           var rsp = JSON.parse(JSON.stringify(this.removeDebugInfo(response) || {}))
           rsp = JSONResponse.array2object(rsp, 'args', ['args'], true)
 
-          tr.compare = JSONResponse.compareResponse(standard, rsp, '', this.isMLEnabled, null, [], ignoreTrend) || {}
+          tr.compare = JSONResponse.compareResponse(standard, rsp, '', this.isMLEnabled, null, ['call()[]'], ignoreTrend) || {}
           tr.compare.duration = it.durationHint
         }
 
@@ -7285,65 +8583,8 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
               }
             }
             else {
-              standard = (StringUtil.isEmpty(testRecord.standard, true) ? null : JSON.parse(testRecord.standard)) || {};
-
-              var code = currentResponse.code;
-              var thrw = currentResponse.throw;
-              var msg = currentResponse.msg;
-
-              var hasCode = standard.code != null;
-              var isCodeChange = standard.code != code;
-              var exceptions = standard.exceptions || [];
-
-              delete currentResponse.code; //code必须一致
-              delete currentResponse.throw; //throw必须一致
-
-              var rsp = JSON.parse(JSON.stringify(currentResponse || {}))
-              rsp = JSONResponse.array2object(rsp, 'args', ['args'], true)
-
-              var find = false;
-              if (isCodeChange && hasCode) {  // 走异常分支
-                for (var i = 0; i < exceptions.length; i++) {
-                  var ei = exceptions[i];
-                  if (ei != null && ei.code == code && ei.throw == thrw) {
-                    find = true;
-                    ei.repeat = (ei.repeat || 0) + 1;  // 统计重复出现次数
-                    break;
-                  }
-                }
-
-                if (find) {
-                  delete currentResponse.msg;
-                }
-              }
-
-              stddObj = isML ? (isCodeChange && hasCode ? standard : JSONResponse.updateStandard(standard, rsp)) : {};
-
-              currentResponse.code = code;
-              currentResponse.throw = thrw;
-
-              if (isCodeChange) {
-                if (hasCode != true) {  // 走正常分支
-                  stddObj.code = code;
-                  stddObj.throw = thrw;
-                }
-                else {  // 走异常分支
-                  currentResponse.msg = msg;
-
-                  if (find != true) {
-                    exceptions.push({
-                      code: code,
-                      'throw': thrw,
-                      msg: msg
-                    })
-
-                    stddObj.exceptions = exceptions;
-                  }
-                }
-              }
-              else {
-                stddObj.repeat = (stddObj.repeat || 0) + 1;  // 统计重复出现次数
-              }
+              standard = (StringUtil.isEmpty(testRecord.standard, true) ? null : JSON.parse(testRecord.standard)) || {}
+              stddObj = JSONResponse.updateFullStandard(standard, currentResponse, isML)
             }
 
             const isNewRandom = isRandom && random.id <= 0
@@ -7634,6 +8875,604 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
           }
 
         })
+      },
+
+      toPathValuePairMap: function (json, path, map) {
+        if (json == null) {
+          return null
+        }
+
+        if (map == null) {
+           map = {}
+        }
+
+        if (json instanceof Array) {
+          for (var i = 0; i < json.length; i++) {
+            var p = StringUtil.isEmpty(path) ? '' + i : path + '/' + i
+            map = this.toPathValuePairMap(json[i], p, map)
+          }
+        }
+        else if (json instanceof Object) {
+          for (var k in json) {
+            var p = StringUtil.isEmpty(path) ? k : path + '/' + k
+            map = this.toPathValuePairMap(json[k], p, map)
+          }
+        }
+        else {
+          map[path == null ? '' : path] = json
+        }
+
+        return map
+      },
+
+      showOptions: function(target, text, before, after, isValue, filter) {
+        currentTarget = target;
+        isInputValue = isValue;
+        selectionStart = target.selectionStart;
+        selectionEnd = target.selectionEnd;
+        App.selectIndex = -1;
+
+        clearTimeout(handler);
+
+        // var posX = 0, posY = 0;
+
+        // var event = window.event;
+        // if (event.pageX || event.pageY) {
+        //   posX = event.pageX;
+        //   posY = event.pageY;
+        // }
+        // else if (event.clientX || event.clientY) {
+        //   posX = event.clientX + document.documentElement.scrollLeft + document.body.scrollLeft;
+        //   posY = event.clientY + document.documentElement.scrollTop + document.body.scrollTop;
+        // }
+        // else if (target.offsetHeight || target.offsetWidth) {
+        //   // posX = target.offsetHeight;
+        //   // posY = target.offsetWidth;
+        // }
+        //
+        // vOption.style.left = posX + 'px';
+        // vOption.style.top = posY + 'px';
+
+
+        var options = App.options;
+        if (options.length > 0 && StringUtil.isNotEmpty(filter, true)) {
+          var newOptions = [];
+          for (var i = 0; i < options.length; i++) {
+            var opt = options[i];
+            var name = opt == null ? null : opt.name;
+            if (name != null && name.indexOf(filter) >= 0) {
+              newOptions.push(opt);
+            }
+          }
+
+          // App.options = [];
+          App.options = newOptions;
+        }
+        else {
+          App.options = [];
+
+          var stringType = CodeUtil.getType4Language(App.language, "string")
+          var objectType = CodeUtil.getType4Language(App.language, "object")
+          var arrayType = CodeUtil.getType4Language(App.language, "array")
+          var varcharType = CodeUtil.getType4Language(App.language, "varchar")
+          var intType = CodeUtil.getType4Language(App.language, "int")
+          var booleanType = CodeUtil.getType4Language(App.language, "boolean")
+          var isReq = App.isEditResponse != true
+
+          if (target == vHeader) {
+            if (isValue != true) {
+              App.options = [
+                {
+                  name: "Cookie",
+                  type: stringType,
+                  comment: "指定 Cookie"
+                }, {
+                  name: "Set-Cookie",
+                  type: stringType,
+                  comment: "设置 Cookie"
+                }, {
+                  name: "Add-Cookie",
+                  type: stringType,
+                  comment: "添加 Cookie"
+                }, {
+                  name: "Token",
+                  type: stringType,
+                  comment: "指定 Token"
+                }, {
+                  name: "Authorization",
+                  type: stringType,
+                  comment: "授权"
+                }, {
+                  name: "Authentication",
+                  type: stringType,
+                  comment: "鉴权"
+                }, {
+                  name: "Content-Type",
+                  type: stringType,
+                  comment: "数据类型"
+                }, {
+                  name: "Accept",
+                  type: stringType,
+                  comment: "接收格式"
+                }, {
+                  name: "Accept-Encoding",
+                  type: stringType,
+                  comment: "接收编码"
+                }, {
+                  name: "Accept-Language",
+                  type: stringType,
+                  comment: "接收语言"
+                }, {
+                  name: "Cache-Control",
+                  type: stringType,
+                  comment: "缓存控制"
+                }, {
+                  name: "Connection",
+                  type: stringType,
+                  comment: "连接控制"
+                }, {
+                  name: "Keep-Alive",
+                  type: stringType,
+                  comment: "保持连接"
+                }];
+            }
+          }
+          else if (target == vRandom || target == vScript) {
+            if (target == vScript) {
+              App.options = [
+                {
+                  name: "type",
+                  type: stringType,
+                  comment: '请求格式类型：PARAM, JSON, FORM, DATA'
+                },{
+                  name: "url",
+                  type: stringType,
+                  comment: '请求地址，例如 http://localhost:8080/get '
+                },{
+                  name: "req",
+                  type: objectType,
+                  comment: '请求参数，例如 { format: true, "User": { "id": 82001 } } '
+                },{
+                  name: "header",
+                  type: objectType,
+                  comment: '请求头，例如 Cookie: abc123 '
+                }];
+
+              if (isValue) {
+                App.options.push({
+                  name: "callback(url, res, err)",
+                  type: objectType,
+                  comment: '回调函数'
+                })
+                App.options.push({
+                  name: "sendRequest(isAdminOperation, type, url, req, header, callback)",
+                  type: objectType,
+                  comment: '真正发送请求函数'
+                })
+                App.options.push({
+                  name: "App.request(isAdminOperation, type, url, req, header, callback)",
+                  type: objectType,
+                  comment: '包装发送请求函数'
+                })
+                App.options.push({
+                  name: "if () {\n    \n} else if () {\n    \n} else {\n    \n}",
+                  type: objectType,
+                  comment: '包装发送请求函数'
+                })
+                App.options.push({
+                  name: "switch () {\n    case 1:\n        \n        break\n    case 2:\n        \n        break\n    default:\n        \n        break\n}",
+                  type: objectType,
+                  comment: '包装发送请求函数'
+                })
+                App.options.push({
+                  name: "try {\n    \n} catch(e) {\n    console.log(e)\n}",
+                  type: objectType,
+                  comment: '包装发送请求函数'
+                })
+                App.options.push({
+                  name: "{}", type: objectType, comment: '对象'
+                })
+                App.options.push({
+                    name: "[]", type: arrayType, comment: '数组'
+                })
+                App.options.push({
+                    name: "undefined", name: "undefined", comment: '未定义'
+                })
+              }
+              else {
+                App.options.push({
+                  name: "callback",
+                  type: objectType,
+                  comment: '回调函数 function(url, res, err) {} '
+                })
+              }
+            }
+
+            if (isValue != true) {
+              var standardObj = null;
+              try {
+                var currentItem = App.isTestCaseShow ? App.remotes[App.currentDocIndex] : App.currentRemoteItem;
+                standardObj = JSON.parse(((currentItem || {})[isReq ? 'Method' : 'TestRecord'] || {}).standard);
+              } catch (e3) {
+                log(e3)
+              }
+              if (standardObj == null) {
+                standardObj = JSONResponse.updateStandard({},
+                  isReq ? App.getRequest(vInput.value) : App.jsoncon == null ? null : JSON.parse(App.jsoncon)
+                )
+              }
+
+              var method = App.isTestCaseShow ? ((App.currentRemoteItem || {}).Method || {}).url : App.getMethod();
+              var isRestful = ! JSONObject.isAPIJSONPath(method);
+              var ind = method == null ? -1 : method.lastIndexOf('/');
+              var ind2 = ind < 0 ? -1 : method.substring(0, ind).lastIndexOf('/');
+              var table = method == null ? null : (ind < 0 ? method : (isRestful
+                ? StringUtil.firstCase(method.substring(ind2+1, ind), true) : method.substring(ind+1))
+              );
+
+              var tableList = docObj == null ? null : docObj['[]']
+              var isAPIJSONRouter = false // TODO
+
+              var json = App.getRequest(vInput.value)
+              var map = App.toPathValuePairMap(json) || {}
+              for (var path in map) {
+                if (StringUtil.isEmpty(path)) {
+                  continue
+                }
+
+                var ks = StringUtil.split(path, '/')
+                var tbl = ks.length < 2 ? table : ks[ks.length - 2]
+
+                var v = map[path]
+                var t = v == null ? null : CodeUtil.getType4Request(v)
+                var k = ks[ks.length - 1]
+
+                App.options.push({
+                  name: target != vScript ? path : JSONResponse.formatKey(ks.join('_'), true, true, true, true, true, true),
+                  type: t == null ? null : (t == 'string' ? stringType : (t == 'integer' ? intType : CodeUtil.getType4Language(App.language, t))),
+                  comment: CodeUtil.getComment4Request(tableList, tbl, k, v, method, false, App.database, App.language
+                    , isReq, ks, isRestful, standardObj, false, isAPIJSONRouter)
+                })
+              }
+            }
+            else if (target == vRandom) {
+              App.options = [
+                {
+                  name: "ORDER_DB(-10, 100000, 'Comment', 'id')",
+                  type: stringType,
+                  comment: "从数据库顺序取值 function(min:Integer, max:Integer, table:String, column:String) 可使用 ORDER_DB+2(0, 100) 间隔 step = 2 位来升序取值"
+                }, {
+                  name: "ORDER_IN(true, 1, 'a')",
+                  type: stringType,
+                  comment: "从选项内顺序取值 function(val0:Any, val1:Any ...) 可使用 ORDER_INT-3(0, 100) 间隔 step = -3 位来降序取值"
+                }, {
+                  name: "ORDER_INT(-10, 100)",
+                  type: stringType,
+                  comment: "从范围内顺序取值 function(min:Integer, max:Integer) 可使用 ORDER_IN+(0, 100) 间隔 step = 1 位来升序取值"
+                }, {
+                  name: "RANDOM_DB(-10, 100000, 'Comment', 'id')",
+                  type: stringType,
+                  comment: "从数据库随机取值 function(min:Integer, max:Integer, table:String, column:String)"
+                }, {
+                  name: "RANDOM_IN(true, 1, 'a')",
+                  type: stringType,
+                  comment: "从选项内随机取值 function(val0:Any, val1:Any ...)"
+                }, {
+                  name: "RANDOM_INT(-10, 100)",
+                  type: stringType,
+                  comment: "从范围内随机取整数 function(min:Integer, max:Integer)"
+                }, {
+                  name: "RANDOM_NUM(-9.9, 99.99)",
+                  type: stringType,
+                  comment: "从范围内随机取小数 function(min:Number, max:Number, precision:Integer)"
+                }, {
+                  name: "RANDOM_STR()",
+                  type: stringType,
+                  comment: "从长度范围内随机取字符串 function(minLength:Integer, maxLength:Integer, regexp:String)"
+                }, {
+                  name: "undefined", type: "undefined", comment: '未定义'
+                }, {
+                  name: "Math.round(100*Math.random())", type: stringType, comment: '自定义代码'
+                }
+              ]
+            }
+            else {
+              App.options.push({
+                name: isSingle ? "res.key" : "res['key']", type: stringType, comment: '从上个请求的结果中取值'
+              })
+            }
+          }
+          else if (target == vInput) {
+          var quote = isSingle ? "'" : '"';
+
+          var table = null;
+          var isArrayKey = false;
+          var isSubqueryKey = false;
+
+          var prev = before;
+          while (prev != null && prev.length > 0) {
+            var lastIndex = prev.lastIndexOf('{');
+            prev = prev.substring(0, lastIndex).trimRight();
+
+            if (prev.endsWith(':')) {
+              prev = prev.substring(0, prev.length - 1).trimRight();
+              var endsWithDoubleQuote = prev.endsWith('"')
+
+              if (endsWithDoubleQuote || prev.endsWith("'")) {
+                prev = prev.substring(0, prev.length - 1);
+                lastIndex = prev.lastIndexOf('\n');
+
+                var lastLine = prev.substring(lastIndex + 1, prev.length);
+                var ind = lastLine.lastIndexOf(endsWithDoubleQuote ? '"' : "'");
+                table = ind < 0 ? null : lastLine.substring(ind + 1, lastLine.length);
+
+                if (App.isTableKey(table)) {
+                  break;
+                }
+                if (table != null && table.endsWith('[]')) {
+                  isArrayKey = true;
+                  break;
+                }
+                if (table != null && table.endsWith('@')) {
+                  isSubqueryKey = true;
+                  break;
+                }
+
+                prev = lastIndex <= 0 ? '' : prev.substring(0, lastIndex);
+              }
+            }
+          }
+
+          if (isValue) {
+            var lastIndex = before.lastIndexOf('\n');
+            var lastLine = before.substring(lastIndex + 1, before.length);
+            lastIndex = lastLine.lastIndexOf(':');
+            lastLine = lastIndex < 0 ? '' : lastLine.substring(0, lastIndex).trim();
+
+            var endsWithDoubleQuote = lastLine.endsWith('"')
+            if (endsWithDoubleQuote || lastLine.endsWith("'")) {
+              lastLine = lastLine.substring(0, lastLine.length - 1);
+            }
+            var ind = lastLine.lastIndexOf(endsWithDoubleQuote ? '"' : "'");
+            var key = ind < 0 ? null : lastLine.substring(ind + 1, lastLine.length);
+
+              switch (key) {
+                case 'type':
+                case '@type':
+                  App.options = [{
+                    name: quote + "boolean" + quote,
+                    type: stringType
+                  }, {
+                    name: quote + "int" + quote,
+                    type: stringType
+                  }, {
+                    name: quote + "long" + quote,
+                    type: stringType
+                  }, {
+                    name: quote + "double" + quote,
+                    type: stringType
+                  }, {
+                    name: quote + "String" + quote,
+                    type: stringType
+                  }, {
+                    name: quote + "Object" + quote,
+                    type: stringType
+                  }, {
+                    name: quote + "Array" + quote,
+                    type: stringType
+                  }, {
+                    name: quote + "JSON" + quote,
+                    type: stringType
+                  }, {
+                    name: quote + "JSONObject" + quote,
+                    type: stringType
+                  }, {
+                    name: quote + "JSONArray" + quote,
+                    type: stringType
+                  }, {
+                    name: quote + "Map<String,Object>" + quote,
+                    type: stringType
+                  }, {
+                    name: quote + "List<String>" + quote,
+                    type: stringType
+                  }, {
+                    name: quote + "Collection<String>" + quote,
+                    type: stringType
+                  }, {
+                    name: quote + "Set<String>" + quote,
+                    type: stringType
+                  }];
+                  break;
+                case 'static':
+                case 'reuse':
+                case 'callback':
+                case 'ui':
+                  App.options = [{
+                    name: "true",
+                    type: booleanType
+                  }, {
+                    name: "false",
+                    type: booleanType
+                  }];
+                  break;
+                case 'timeout':
+                    for (var i = 0; i <= 100; i++) {
+                        App.options.push({
+                          name: new String(100*i),
+                          type: intType,
+                          comment: '毫秒'
+                        });
+                    }
+                  break;
+                case 'constructor':
+                  App.options = [
+                    {name: quote + "getInstance" + quote, type: varcharType, comment: '获取实例'},
+                    {name: quote + "getDefault" + quote, type: varcharType, comment: '获取实例'},
+                    {name: quote + "get" + quote, type: varcharType, comment: '获取实例'},
+                    {name: quote + "instance" + quote, type: varcharType, comment: '获取实例'},
+                    {name: quote + "singleton" + quote, type: varcharType, comment: '获取单例'}
+                  ];
+                  break;
+                case 'classArgs':
+                  App.options = [{
+                    name: "[]",
+                    type: arrayType
+                  }, {
+                    name: "[\n        null\n    ]",
+                    type: arrayType
+                  }, {
+                    name: "[\n        null,\n        null\n    ]",
+                    type: arrayType
+                  }];
+                  break;
+                case 'this':
+                  App.options = [{
+                    name: "{}",
+                    type: objectType
+                  }, {
+                    name: "{\n        " + quote + "type" + quote + ": " + quote + "apijson.demo.server.model.User"
+                        + quote + ",\n        " + quote + "value" + quote + ": {}\n    }",
+                    type: objectType
+                  }];
+                  break;
+                case 'methodArgs':
+                  App.options = [{
+                    name: "[]",
+                    type: arrayType
+                  }, {
+                    name: "[\n" +
+                        "        {\n" +
+                        "            " + quote + "type" + quote + ": " + quote + "String" + quote + ",\n" +
+                        "            " + quote + "value" + quote + ": " + quote + "APIJSON" + quote + "\n" +
+                        "        }\n" +
+                        "    ]",
+                    type: arrayType
+                  }, {
+                    name: "[\n" +
+                        "        {\n" +
+                        "            " + quote + "type" + quote + ": " + quote + "int" + quote + ",\n" +
+                        "            " + quote + "value" + quote + ": 1\n" +
+                        "        },\n" +
+                        "        {\n" +
+                        "            " + quote + "type" + quote + ": " + quote + "boolean" + quote + ",\n" +
+                        "            " + quote + "value" + quote + ": true\n" +
+                        "        }\n" +
+                        "    ]",
+                    type: arrayType
+                  }];
+                  break;
+                default:
+                  if (key.endsWith(')') && key.indexOf('(') > 0) {
+                      App.options = [{
+                        name: "{\n" +
+                            "                " + quote + "type" + quote + ": " + quote + "int" + quote + ",\n" +
+                            "                " + quote + "return" + quote + ": 1,\n" +
+                            "                " + quote + "callback" + quote + ": true\n" +
+                            "            }",
+                        type: stringType,
+                        comment: '回调方法'
+                      }];
+                  }
+                  break;
+              }
+
+              var columnList = App.getColumnListWithModelName(table);
+              if (columnList != null) {
+                var isHaving = key == '@having';
+                var arr = ['max', 'min', 'sum', 'avg', 'length', 'len', 'json_length'];
+
+                var ks = '';
+                var first = true;
+                for (var j = 0; j < columnList.length; j++) {
+                  var column = App.getColumnObj(columnList, j)
+                  var name = column == null ? null : column.column_name;
+                  if (StringUtil.isEmpty(name, true)) {
+                    continue;
+                  }
+
+                  var k = name;
+                  switch (key) {
+                    case '@having':
+                      var which = Math.floor(arr.length * Math.random());
+                      k = arr[which] + '(' + name + ')' + (Math.random() < 0.2 ? '<82010' : (Math.random() < 0.5 ? '>3' : '%2=0'));
+                      break;
+                    case '@order':
+                      k = name + (Math.random() < 0.2 ? '' : (Math.random() < 0.5 ? '-' : '+'));
+                      break;
+                    case '@cast':
+                      var t = column.column_type;
+                      var ind = t == null ? -1 : t.indexOf('(');
+                      k = name + ':' + StringUtil.toUpperCase(ind < 0 ? t : t.substring(0, ind));
+                      break;
+                    // case '@column':
+                    // case '@group':
+                    // case '@json':
+                    // case '@null':
+                    default:
+                      k = name;
+                      break;
+                  }
+
+                  App.options.push({
+                    name: quote + k + quote,
+                    type: CodeUtil.getType4Language(App.language, column.column_type),
+                    comment: column.column_comment
+                  })
+
+                  ks += (first ? '' : (isHaving ? ';' : ',')) + k;
+                  first = false;
+                }
+
+                App.options.push({
+                  name: quote + ks + quote,
+                  type: stringType,
+                  comment: '所有字段组合'
+                })
+              }
+
+          } else {
+            App.options = [
+              {name: "type", type: varcharType, comment: "类型"},
+              {name: "value", type: objectType, comment: "值"},
+              {name: "reuse", type: booleanType, comment: "复用实例"},
+              {name: "callback", type: booleanType, comment: "是否为最终回调方法"},
+              {name: "@type", type: varcharType, comment: "指定具体类型"},
+              {name: "static", type: booleanType, comment: "是否为静态"},
+              {name: "ui", type: booleanType, comment: "放 UI 线程执行，仅 Android 可用"},
+              {name: "timeout", type: intType, comment: "超时时间"},
+              {name: "package", type: varcharType, comment: "被测方法所在的包名"},
+              {name: "class", type: varcharType, comment: "被测方法所在的包名"},
+              {name: "constructor", type: varcharType, comment: "构造方法，如果是类似单例模式的类，不能用默认构造方法，可以自定义获取实例的方法，传参仍用 classArgs"},
+              {name: "classArgs", type: arrayType, comment: "构造方法的参数值"},
+              {name: "this", type: objectType, comment: "当前类实例，和 constructor & classArgs 二选一"},
+              {name: "method", type: varcharType, comment: "被测方法名"},
+              {name: "methodArgs", type: arrayType, comment: "被测方法的参数值"},
+              {name: "callback(int,Result,Exception)", type: objectType, comment: "回调方法"},
+              {name: "onResponse(Response)", type: objectType, comment: "回调方法"},
+              {name: "onSuccess(int,Response)", type: objectType, comment: "回调方法"},
+              {name: "onFailure(int,Exception)", type: objectType, comment: "回调方法"},
+              {name: "onSucceed(Result)", type: objectType, comment: "回调方法"},
+              {name: "onFailed(Exception)", type: objectType, comment: "回调方法"},
+              {name: "onComplete()", type: objectType, comment: "回调方法"},
+              {name: "onCancel()", type: objectType, comment: "回调方法"},
+              {name: "onCreate()", type: objectType, comment: "回调方法"},
+              {name: "onStart()", type: objectType, comment: "回调方法"},
+              {name: "onRestart()", type: objectType, comment: "回调方法"},
+              {name: "onStop()", type: objectType, comment: "回调方法"},
+              {name: "onResume()", type: objectType, comment: "回调方法"},
+              {name: "onPause()", type: objectType, comment: "回调方法"},
+              {name: "onDestroy()", type: objectType, comment: "回调方法"}
+            ];
+          }
+          }
+        }
+
+        if (App.options.length > 0) {
+          vOption.focus();
+        }
+        else {
+          target.focus();
+        }
       }
     },
     watch: {
@@ -7675,6 +9514,10 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
         if (types != null && types.length > 0) {
           this.types = types instanceof Array ? types : StringUtil.split(types)
         }
+        var otherEnv = this.getCache('', 'otherEnv')
+        if (StringUtil.isEmpty(otherEnv, true) == false) {
+          this.otherEnv = otherEnv
+        }
         var server = this.getCache('', 'server')
         if (StringUtil.isEmpty(server, true) == false) {
           this.server = server
@@ -7688,6 +9531,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
 
         this.isDelegateEnabled = this.getCache('', 'isDelegateEnabled', this.isDelegateEnabled)
         this.isEncodeEnabled = this.getCache('', 'isEncodeEnabled', this.isEncodeEnabled)
+        this.isEnvCompareEnabled = this.getCache('', 'isEnvCompareEnabled', this.isEnvCompareEnabled)
         //预览了就不能编辑了，点开看会懵 this.isPreviewEnabled = this.getCache('', 'isPreviewEnabled', this.isPreviewEnabled)
         this.isHeaderShow = this.getCache('', 'isHeaderShow', this.isHeaderShow)
         this.isRandomShow = this.getCache('', 'isRandomShow', this.isRandomShow)
@@ -7707,6 +9551,16 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
           '\nvar accounts = this.getCache(URL_BASE, accounts)' +
           '\n} catch (e) {\n' + e.message)
       }
+      try { //这里是初始化，不能出错
+        var otherEnvCookieMap = this.getCache(App.otherEnv, 'otherEnvCookieMap')
+        if (otherEnvCookieMap != null) {
+          this.otherEnvCookieMap = otherEnvCookieMap
+        }
+      } catch (e) {
+        console.log('created  try { ' +
+            '\nvar accounts = this.getCache(URL_BASE, accounts)' +
+            '\n} catch (e) {\n' + e.message)
+      }
 
       try { //可能URL_BASE是const类型，不允许改，这里是初始化，不能出错
         this.User = this.getCache(this.server, 'User', {})
@@ -7724,6 +9578,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
         this.randomSubPage = this.getCache(this.server, 'randomSubPage', this.randomSubPage)
         this.randomSubCount = this.getCache(this.server, 'randomSubCount', this.randomSubCount)
         this.delegateId = this.getCache(this.server, 'delegateId', this.delegateId)
+        this.otherEnvDelegateId = this.getCache(this.server, 'otherEnvDelegateId', this.otherEnvDelegateId)
 
         CodeUtil.thirdPartyApiMap = this.getCache(this.thirdParty, 'thirdPartyApiMap')
       } catch (e) {
@@ -7748,6 +9603,10 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
       //无效，只能在index里设置 vUrl.value = this.getCache('', 'URL_BASE')
 
       this.listHistory()
+      if (this.isScriptShow) {
+        this.changeScriptType()
+        this.listScript()
+      }
 
       var rawReq = getRequestFromURL()
       if (rawReq == null || StringUtil.isEmpty(rawReq.type, true)) {
@@ -7845,14 +9704,102 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
       // 快捷键 CTRL + I 格式化 JSON
       document.addEventListener('keydown', function(event) {
         // alert(event.key) 小写字母 i 而不是 KeyI
-        // if (event.ctrlKey && event.keyCode === 73) { // KeyI 无效  event.key === 'KeyI' && event.target == vInput){
-        var isEnter = event.keyCode === 13
-        var isDel = event.keyCode === 8 || event.keyCode === 46 // backspace 和 del
-        if (isEnter || isDel) { // enter || delete
-          var target = event.target
+
+        var target = event.target;
+
+        var keyCode = event.keyCode;
+        var isEnter = keyCode === 13;
+        var isDel = keyCode === 8 || keyCode === 46; // backspace 和 del
+        var isChar = (keyCode >= 48 && keyCode <= 90) || (keyCode >= 106 && keyCode <= 111) || (keyCode >= 186 && keyCode <= 222);
+
+        currentTarget = target;
+
+        if (keyCode === 27) {  // ESC
+          if (document.activeElement == vOption || App.options.length > 0) {
+            App.options = [];
+            target.focus();
+            return;
+          }
+        }
+        else if (keyCode === 40 || keyCode === 38) {  // 方向键 上 和 下
+          if (document.activeElement == vOption || App.options.length > 0) {
+            // currentTarget = target;
+            if (keyCode === 38) {
+              if (App.selectIndex >= 0) {
+                App.selectIndex --
+                App.selectInput(App.selectIndex < 0 ? null : App.options[App.selectIndex], App.selectIndex)
+              }
+            } else if (App.selectIndex < App.options.length) {
+              App.selectIndex ++
+              App.selectInput(App.selectIndex >= App.options.length ? null : App.options[App.selectIndex], App.selectIndex)
+            }
+
+            // var options = document.activeElement == vOption || App.options.length > 0 ? App.options : null; // vOption.options : null;
+            // if (options != null) {
+            //   for (var i = 0; i < options.length; i++) {
+            //     var opt = options[i]
+            //     if (opt != null && (opt.selected || i == App.selectIndex)) {
+            //       if (keyCode === 38) {
+            //         if (i > 0) {
+            //           opt.selected = false
+            //           options[i - 1].selected = true
+            //           App.selectInput(App.options[i - 1], i - 1)
+            //         }
+            //       } else {
+            //         if (i < options.length - 1) {
+            //           opt.selected = false
+            //           options[i + 1].selected = true
+            //           App.selectInput(App.options[i + 1], i + 1)
+            //         }
+            //       }
+            //
+            //       break
+            //     }
+            //   }
+
+            event.preventDefault();
+            return;
+            // }
+          }
+        }
+        else if (isEnter || isDel) { // enter || delete
+          if (document.activeElement == vOption || App.options.length > 0) { // hasFocus is undefined   vOption.hasFocus()) {
+
+            var options = vOption.options || App.options
+            if (options != null && options.length > 0) {
+              if (isDel) {
+                var selectionStart = target.selectionStart;
+                var selectionEnd = target.selectionEnd;
+
+                var text = StringUtil.get(target.value);
+                var before = text.substring(0, selectionStart);
+                var after = text.substring(selectionEnd);
+
+                App.showOptions(target, text, before, after);
+              }
+              else {
+                event.preventDefault();
+
+                for (var i = 0; i < options.length; i++) {
+                  var opt = options[i]
+                  if (opt != null && (opt.selected || i == App.selectIndex)) {
+                    // currentTarget = target;
+                    App.selectInput(App.options[i], i, true);
+                    return;
+                  }
+                }
+
+                App.selectIndex - 1;
+                App.options = [];
+              }
+            }
+
+            return;
+          }
+
           if (target == vUrl) {
           }
-          else {
+          else if (target != vOption) {
             var selectionStart = target.selectionStart;
             var selectionEnd = target.selectionEnd;
 
@@ -7860,44 +9807,204 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
             var before = text.substring(0, selectionStart);
             var after = text.substring(selectionEnd);
 
-            var lastIndexOfNewline = before.lastIndexOf('\n')
-            var lastLineStart = lastIndexOfNewline + 1;
-            var lastLine = before.substring(lastLineStart);
+            var firstIndex = isEnter ? after.indexOf('\n') : -1;
+            var firstLine = firstIndex <= 0 ? '' : after.substring(0, firstIndex);
+            var tfl = firstLine.trimLeft();
 
-            var prefix = '';
+            var hasRight = tfl.length > 0;
+            if (isEnter && hasRight != true) {
+              var aft = after.substring(firstIndex + 1);
+              var fi = aft.indexOf('\n');
+              tfl = fi < 0 ? aft : aft.substring(0, fi);
+            }
+
+            // var lastLineStart = isEnter && tfl.length > 0 ? -1 : before.lastIndexOf('\n') + 1;
+            var lastLineStart = before.lastIndexOf('\n') + 1;
+            var lastLine = lastLineStart < 0 ? '' : before.substring(lastLineStart);
+
+            var prefixEnd = 0;
             for (var i = 0; i < lastLine.length; i++) {
-              if (lastLine.charAt(i) != ' ') {
+              if (lastLine.charAt(i).trim().length > 0) {
                 if (isDel) {
-                  prefix = '';
+                  prefixEnd = 0;
                 }
                 break;
               }
 
-              prefix += ' ';
+              prefixEnd += 1;
             }
 
-            if (prefix.length > 0) {
+
+            var prefix = prefixEnd <= 0 ? '' : lastLine.substring(0, prefixEnd);
+
+            var isStart = false;
+            var isEnd = false;
+            var hasPadding = false;
+            var hasComma = false;
+            var isVar = false;
+            var isJSON = false;
+            var hasNewKey = null;
+            if (isEnter) {
+              isEnd = tfl.startsWith(']') || tfl.startsWith('}')
+              var tll = lastLine.trimRight();
+              if (target != vInput) {
+                hasNewKey = ! hasRight;
+              }
+              else if (isEnd || hasRight || tll.endsWith('[')) {
+                hasNewKey = false;
+              }
+              // else if (tll.indexOf('":') > 1 || tll.indexOf("':") > 1) {
+              else if (tll.indexOf(':') > 1) { // (target == vInput ? 1 : 0) || (target == vScript && tll.indexOf('=') > 0)) {
+                hasNewKey = true;
+              }
+              // else {
+              //   var ind = tll.indexOf(':')
+              //   if (ind > 0) {
+              //     var ind2 = tll.indexOf('"')
+              //   }
+              // }
+
+              var lastInd = tfl.lastIndexOf('(');
+              isVar = target == vScript && (before.indexOf('{') < 0 || (lastInd > 0 && tfl.endsWith('{') && tfl.lastIndexOf(')') > lastInd));
+              isJSON = target == vInput || (isVar != true && target == vScript);
+
+              isStart = tll.endsWith('{') || tll.endsWith('[');
+              hasPadding = hasRight != true && isStart;
+
+              tll = before.trimRight();
+              hasComma = isJSON && isStart != true && isEnd != true && hasRight != true && tll.endsWith(',') != true;
+              if (hasComma) {
+                for (var i = before.length; i >= 0; i--) {
+                  if (before.charAt(i).trim().length > 0) {
+                    break;
+                  }
+
+                  selectionStart -= 1;
+                }
+
+                before = tll + ',';
+                selectionStart += 1;
+              }
+
+              if (hasNewKey == null) {
+                hasNewKey = tll.endsWith('{');
+              }
+
+            }
+
+            if (prefix.length > 0 || (isEnter && target != vInput)) {
               if (isEnter) {
-                target.value = before + '\n' + prefix + after.trimLeft();
-                target.selectionEnd = target.selectionStart = selectionStart + prefix.length;
+                // if (target == vScript) {
+                //   hasNewKey = false // TODO 把全局定义的 function, variable 等放到 options。 var value = fun()
+                //   target.value = before + '\n' + prefix + (hasPadding ? '    ' : '')
+                //     + (isEnd ? after : (hasRight ? (hasPadding ? tfl : tfl) : '') + '\n' + after.substring(firstIndex + 1)
+                //     );
+                //   target.selectionEnd = target.selectionStart = selectionStart + prefix.length + 1 + (hasPadding ? 4 : 0);
+                // }
+                // else {
+                  var newText = before + '\n' + prefix + (hasPadding ? '    ' : '')
+                    + (hasNewKey ? (isJSON != true ? (isVar ? 'var ' : '') : (isSingle ? "''" : '""'))
+                      + (isVar ? ' = ' : ': ') + (target == vHeader ? '' : 'null') + (hasComma || isEnd || isJSON != true ? '' : ',') : '')
+                    + (isEnd ? after : (hasRight ? (hasPadding ? tfl.trimLeft() : tfl) : '') + '\n' + after.substring(firstIndex + 1)
+                    );
+                  target.value = newText
+                  if (target == vScript) { // 不这样会自动回滚
+                    App.scripts[App.scriptType][App.scriptBelongId][App.isPreScript ? 'pre' : 'post'].script = newText
+                  }
+
+                  target.selectionEnd = target.selectionStart = selectionStart + prefix.length + (hasComma && isJSON ? 1 : 0)
+                    + (hasNewKey ? 1 : 0) + (hasPadding ? 4 : 0) + (isVar ? 4 : (isJSON ? 1 : 0));
+                // }
                 event.preventDefault();
+
+                if (hasNewKey) {
+                  App.showOptions(target, text, before, after);
+                  if (target == vInput) {
+                    inputted = target.value;
+                  }
+                  return;
+                }
               }
               else if (isDel) {
-                target.value = (selectionStart == selectionEnd ? StringUtil.get(before.substring(0, lastIndexOfNewline) + ' ') : before) + after;
-                target.selectionEnd = target.selectionStart = selectionStart == selectionEnd ? lastIndexOfNewline : selectionStart;
+                var newStr = (selectionStart == selectionEnd ? StringUtil.get(before.substring(0, lastLineStart - 1) + ' ') : before) + after;
+                target.value = newStr;
+                if (target == vScript) { // 不这样会自动回滚
+                  App.scripts[App.scriptType][App.scriptBelongId][App.isPreScript ? 'pre' : 'post'].script = newStr
+                }
+
+                target.selectionEnd = target.selectionStart = selectionStart == selectionEnd ? lastLineStart - 1 : selectionStart;
                 event.preventDefault();
+              }
+
+              if (target == vInput) {
+                inputted = target.value;
               }
             }
           }
         }
-        else if (event.ctrlKey || event.metaKey) {
-          var target = event.target;
+        else if (keyCode === 9) {  // Tab 加空格
+          try {
+            var selectionStart = target.selectionStart;
+            var selectionEnd = target.selectionEnd;
+
+            var text = StringUtil.get(target.value);
+            var before = text.substring(0, selectionStart);
+            var after = text.substring(selectionEnd);
+
+            var ind = before.lastIndexOf('\n');
+            var start = ind < 0 ? 0 : ind + 1;
+            ind = after.indexOf('\n');
+            var end = ind < 0 ? text.length : selectionEnd + ind - 1;
+
+            var selection = text.substring(start, end);
+            var lines = StringUtil.split(selection, '\n');
+
+            var newStr = text.substring(0, start);
+
+            var prefix = '    ';
+            var prefixLen = prefix.length;
+            for (var i = 0; i < lines.length; i ++) {
+              var l = lines[i] || '';
+              if (i > 0) {
+                newStr += '\n';
+              }
+
+              newStr += prefix + l;
+              if (i <= 0) {
+                selectionStart += prefixLen;
+              }
+              selectionEnd += prefixLen;
+            }
+
+            newStr += text.substring(end);
+
+            target.value = newStr;
+            if (target == vScript) { // 不这样会自动回滚
+              App.scripts[App.scriptType][App.scriptBelongId][App.isPreScript ? 'pre' : 'post'].script = newStr
+            }
+
+            event.preventDefault();
+            if (target == vInput) {
+              inputted = newStr;
+            }
+
+            target.selectionStart = selectionStart;
+            target.selectionEnd = selectionEnd;
+          } catch (e) {
+            log(e)
+          }
+        }
+        else if ((event.ctrlKey || event.metaKey) && keyCode == 83) { // Ctrl + S 保存
+          App.showSave(true)
+          event.preventDefault()
+        }
+        else if ((event.ctrlKey || event.metaKey) && ([68, 73, 191].indexOf(keyCode) >= 0 || (isChar != true && event.shiftKey != true))) {
           var selectionStart = target.selectionStart;
           var selectionEnd = target.selectionEnd;
 
-          // 这里拿不到 clipboardData  if (event.keyCode === 86) {
+          // 这里拿不到 clipboardData  if (keyCode === 86) {
 
-          if (event.keyCode === 73) {  // Ctrl + 'I'  格式化
+          if (keyCode === 73) {  // Ctrl + 'I'  格式化
             try {
               var isInput = target == vInput;
               var commentChar = isInput ? '#' : '//';
@@ -7913,25 +10020,29 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
                 var ind = l.lastIndexOf(' ' + commentChar);
                 l = ind < 0 ? l : StringUtil.trim(l.substring(0, ind));
 
-                if (target == vHeader || target == vRandom) {
-                  ind = l.indexOf(':');
-                  if (ind >= 0) {
-                    var left = target == vHeader ? StringUtil.trim(l.substring(0, ind)) : l.substring(0, ind);
-                    l = left + ': ' + StringUtil.trim(l.substring(ind + 1));
+                  if (target == vHeader || target == vRandom) {
+                    ind = l.indexOf(':');
+                    if (ind >= 0) {
+                      var left = target == vHeader ? StringUtil.trim(l.substring(0, ind)) : l.substring(0, ind);
+                      l = left + ': ' + StringUtil.trim(l.substring(ind + 1));
+                    }
+                  }
+
+                  if (l.length > 0) {
+                    newStr += '\n' + l;
                   }
                 }
 
-                if (l.length > 0) {
-                  newStr += '\n' + l;
+                newStr = StringUtil.trim(newStr);
+                target.value = newStr;
+                if (target == vScript) { // 不这样会自动回滚
+                  App.scripts[App.scriptType][App.scriptBelongId][App.isPreScript ? 'pre' : 'post'].script = newStr
                 }
-              }
-
-              target.value = StringUtil.trim(newStr);
             } catch (e) {
               log(e)
             }
           }
-          else if (event.keyCode === 191) {  // Ctrl + '/' 注释与取消注释
+          else if (keyCode === 191) {  // Ctrl + '/' 注释与取消注释
             try {
               var text = StringUtil.get(target.value);
               var before = text.substring(0, selectionStart);
@@ -7961,17 +10072,23 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
                   var suffix = l.substring(ind + commentSignLen);
                   if (suffix.startsWith(' ')) {
                     suffix = suffix.substring(1);
-                    selectionStart -= 1;
+                    if (i <= 0) {
+                      selectionStart -= 1;
+                    }
                     selectionEnd -= 1;
                   }
 
                   newStr += StringUtil.get(l.substring(0, ind)) + StringUtil.get(suffix)
-                  selectionStart -= commentSignLen;
+                  if (i <= 0) {
+                    selectionStart -= commentSignLen;
+                  }
                   selectionEnd -= commentSignLen;
                 }
                 else {
                   newStr += commentSign + ' ' + l;
-                  selectionStart += commentSignLen + 1;
+                  if (i <= 0) {
+                    selectionStart += commentSignLen + 1;
+                  }
                   selectionEnd += commentSignLen + 1;
                 }
               }
@@ -7979,6 +10096,35 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
               newStr += text.substring(end);
 
               target.value = newStr;
+              if (target == vScript) { // 不这样会自动回滚
+                App.scripts[App.scriptType][App.scriptBelongId][App.isPreScript ? 'pre' : 'post'].script = newStr
+              }
+
+              if (target == vInput) {
+                inputted = newStr;
+              }
+            } catch (e) {
+              log(e)
+            }
+          }
+          else if (keyCode == 68) {  // Ctrl + 'D' 删除行
+            try {
+              var text = StringUtil.get(target.value);
+              var before = text.substring(0, selectionStart);
+              var after = text.substring(selectionEnd);
+
+              var lastIndex = before.lastIndexOf('\n');
+              var firstIndex = after.indexOf('\n');
+
+              var newStr = (lastIndex < 0 ? '' : before.substring(0, lastIndex)) + '\n' + after.substring(firstIndex + 1);
+              target.value = newStr;
+              if (target == vScript) { // 不这样会自动回滚
+                App.scripts[App.scriptType][App.scriptBelongId][App.isPreScript ? 'pre' : 'post'].script = newStr
+              }
+
+              selectionEnd = selectionStart = lastIndex + 1;
+              event.preventDefault();
+
               if (target == vInput) {
                 inputted = newStr;
               }
@@ -7990,6 +10136,36 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
           target.selectionStart = selectionStart;
           target.selectionEnd = selectionEnd;
         }
+        else if (event.shiftKey || isChar) {
+          if (isChar && App.options.length > 0) {
+            var key = StringUtil.get(event.key);
+
+            var selectionStart = target.selectionStart;
+            var selectionEnd = target.selectionEnd;
+
+            var text = StringUtil.get(target.value);
+            var before = text.substring(0, selectionStart);
+            var after = text.substring(selectionEnd);
+            var selection = text.substring(selectionStart, selectionEnd);
+            text = before + (isInputValue && selection == 'null' ? '' : selection) + key + after;
+
+            target.value = text;
+            if (target == vScript) { // 不这样会自动回滚
+              App.scripts[App.scriptType][App.scriptBelongId][App.isPreScript ? 'pre' : 'post'].script = text
+            }
+
+            target.selectionStart = selectionStart;
+            target.selectionEnd = (isInputValue && selection == 'null' ? selectionStart : selectionEnd) + key.length;
+            event.preventDefault();
+
+            App.showOptions(target, text, before, after, isInputValue, key);
+          }
+
+          return;
+        }
+
+        App.selectIndex = -1;
+        App.options = [];
       })
 
     }

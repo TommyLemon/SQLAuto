@@ -263,7 +263,8 @@ textarea {
 }
 
 .right-bar {
-  height: 40px;
+  height: auto;
+  min-height: 40px;
   border-bottom: #DDD 1px solid;
   width: 100%;
   position: absolute;
@@ -325,6 +326,10 @@ textarea {
   border: #DDD 1px solid;
   border-bottom: 0;
   border-top: 0;
+}
+
+.pop a {
+  padding: 10px;
 }
 
 .pop-btn {
@@ -471,7 +476,7 @@ textarea {
 }
 /* .json-link:link, .json-link:visited {
   color: #717171;
-  text-decoration: none 
+  text-decoration: none
 } */
 .json-link:hover, .json-link:active {
   color: #3ab54a!important;

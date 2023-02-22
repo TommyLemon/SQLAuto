@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>SQLAuto-机器学习零代码测试 SQL、任意增删改查、任意 SQL 模板变量、一键批量生成</title>
+    <title>SQLAuto-机器学习零代码测试、任意模板变量增删改查、一键批量生成测试数据</title>
     <meta charset="utf-8" />
     <meta name="keywords" content="apijson,sql,auto,sqlauto,自动生成接口文档,自动化接口回归测试,机器学习接口回归测试,回归测试,机器学习,数据库测试,SQL测试,自动化,SQL 自动化,数据库自动化"/>
     <meta name="description" content="SQLAuto-机器学习零代码测试 SQL、任意增删改查、任意 SQL 模板变量、一键批量生成"/>
@@ -110,17 +110,20 @@
                 </a>
                 <ul class="themes pop" style="z-index: 200;padding: 0px;margin-top: 8px;width: 300px">
                   <a style="border-bottom: #DDD 1px solid;width: 100%" href="javascript:void(0)" @click="showConfig(! isDelegateEnabled, 9)">托管服务器代理: {{ isDelegateEnabled ? '已开启，点击关闭' : '已关闭，点击开启' }}</a>
+                  <a style="border-bottom: #DDD 1px solid;width: 100%" href="javascript:void(0)" @click="showConfig(! isEnvCompareEnabled, 14)">对比其它环境结果:  {{ isEnvCompareEnabled ? '已开启，点击关闭' : '已关闭，点击开启' }}</a>
                   <a style="border-bottom: #DDD 1px solid;width: 100%" href="javascript:void(0)" @click="showConfig(! isEncodeEnabled, 12)">自动 URL 转义:  {{ isEncodeEnabled ? '已开启，点击关闭' : '已关闭，点击开启' }}</a>
                   <a style="border-bottom: #DDD 1px solid;width: 100%" href="javascript:void(0)" @click="showConfig(! isPreviewEnabled, 10)">预览左侧输入框:  {{ isPreviewEnabled ? '已开启，点击关闭' : '已关闭，点击开启' }}</a>
                   <a v-show="User.id != null && User.id > 0" style="border-bottom: #DDD 1px solid;width: 100%" href="javascript:void(0)" @click="showConfig(! isEditResponse, 11)">当前编辑模式:  {{ isEditResponse ? 'Response 后端响应结果' : 'Request 前端请求参数' }}</a>
-                  <a style="border-bottom: #DDD 1px solid;width: 100%" href="javascript:void(0)" @click="showConfig(StringUtil.isEmpty(host, true), 3)">{{ StringUtil.isEmpty(host, true) ? '隐藏(固定)URL Host: 可用空格隔开' : '显示(编辑)URL Host: \n' + host }}</a>
+                  <a style="border-bottom: #DDD 1px solid;width: 100%" href="javascript:void(0)" @click="showConfig(StringUtil.isEmpty(host, true), 3)">{{ StringUtil.isEmpty(host, true) ? '隐藏(固定)URI Host: 可用空格隔开' : '显示(编辑)URI Host: \n' + host }}</a>
                   <a style="border-bottom: #DDD 1px solid;width: 100%;display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden;" href="javascript:void(0)" @click="showConfig(! isHeaderShow, 4)">{{ (isHeaderShow ? '隐藏(固定)' : '显示(编辑)') + (isEditResponse ? '参数值 Argument Value' : '参数值 Argument Value' ) }}</a>
                   <a style="border-bottom: #DDD 1px solid;width: 100%;display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden;" href="javascript:void(0)" @click="showConfig(! isRandomShow, 5)">{{ isRandomShow ? '隐藏(固定)参数注入 Random Test' : '显示(编辑)参数注入 Random Test' }}</a>
-				  <a style="border-bottom: #DDD 1px solid;width: 100%" href="javascript:void(0)" @click="showConfig(true, 2)">生成代码(封装,解析) : {{ language || '例如 Java' }}</a>
+                  <a style="border-bottom: #DDD 1px solid;width: 100%;display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden;" href="javascript:void(0)" @click="showConfig(! isScriptShow, 13)">{{ (isScriptShow ? '隐藏(固定)' : '显示(编辑)') + '执行脚本 JavaScript' }}</a>
+                  <a style="border-bottom: #DDD 1px solid;width: 100%" href="javascript:void(0)" @click="showConfig(true, 2)">生成代码(封装,解析) : {{ language || '例如 Java' }}</a>
                   <a style="border-bottom: #DDD 1px solid;width: 100%" href="javascript:void(0)" @click="showConfig(true, 0)">数据库类型 Database: {{ database || '例如 MYSQL' }}</a>
                   <a style="border-bottom: #DDD 1px solid;width: 100%" href="javascript:void(0)" @click="showConfig(true, 1)">数据库名/模式 Schema: {{ schema || '例如 sys' }}</a>
                   <a v-show="User.id == null || User.id <= 0" style="border-bottom: #DDD 1px solid;width: 100%" href="javascript:void(0)" @click="showConfig(true, 7)">使用的请求类型: {{ types == null || types.length <= 0 ? '点击设置' : (types instanceof Array ? types.join() : types) }}</a>
-                  <a v-show="User.id == null || User.id <= 0" style="border-bottom: #DDD 1px solid;width: 100%" href="javascript:void(0)" @click="showConfig(true, 6)">托管服务器地址 URL: {{ server || '点击设置' }}</a>
+				  <a style="border-bottom: #DDD 1px solid;width: 100%" href="javascript:void(0)" @click="showConfig(true, 15)">其它环境地址 URI Host: {{ otherEnv || '点击设置' }}</a>
+                  <a v-show="User.id == null || User.id <= 0" style="border-bottom: #DDD 1px solid;width: 100%" href="javascript:void(0)" @click="showConfig(true, 6)">托管服务器地址 URL Host: {{ server || '点击设置' }}</a>
                   <a v-show="false && User.id != null && User.id > 0" style="border-bottom: #DDD 1px solid;width: 100%" href="javascript:void(0)" @click="showConfig(true, 8)">导入第三方文档(平台名 URL): <br/>{{ thirdParty || '点击设置' }}</a>
                 </ul>
       </span>
@@ -353,17 +356,19 @@ searchKey: ORDER_IN('%a%', '%b%c%', null, undefined)  // 从选项中顺序取�
 userId: RANDOM_DB(0, 100000, 'Comment', 'userId')  // 从数据库随机取值
 limit: Math.round(100*Math.random())  // 通过 JavaScript 代码来自定义 [] 内的 page
 ">
-searchKey: '%a%'  // 固定常量值
-userId: RANDOM_IN(82001, 82002, 82003)  // 随机选项取值
-limit: ORDER_IN(1, 3, 5, 10)  // 顺序选项取值
-offset: RANDOM_INT(0, 5)  // 随机范围取值
-  // 从数据库随机取值  userId: RANDOM_DB(0, 100000, 'Comment', 'userId')
+searchKey: '%a%' // 固定常量值
+userId: RANDOM_IN(82001, 82002, 82003) // 随机选项取值
+limit: ORDER_IN(1, 3, 5, 10) // 顺序选项取值
+offset: RANDOM_INT(0, 5) // 随机范围取值
+// 从数据库随机取值  userId: RANDOM_DB(0, 100000, 'Comment', 'userId')
 
-  // 注释可省略，但如果未省略则前面两个空格必须；清空文本内容可查看规则。
+// 回车智能生成。注释可省略，未省略则前面必须空格；清空文本内容可查看规则。
 
-  // ## 快捷键
-  // Ctrl + I 或 Command + I 格式化文本，清除所有注释和无效空格、换行等；
-  // Ctrl + / 或 Command + / 对选中行 新增行注释 或 取消行注释；
+// ## 快捷键
+// Ctrl + I 或 Command + I 格式化文本，清除所有注释和无效空格、换行等；
+// Ctrl + / 或 Command + / 对选中行 新增行注释 或 取消行注释；
+// Ctrl + D 或 Command + D 删除 选中行；
+// Ctrl + S 或 Command + S 保存当前请求；
                         </textarea>
                     </div>
                 </div>
@@ -399,7 +404,7 @@ offset: RANDOM_INT(0, 5)  // 随机范围取值
               </a>
               <ul class="historys pop" style="width: 304px"> <!-- 没必要太长，遮挡范围过大 // 490 刚好与 URL 输入框左对齐 -->
                   <li v-for="(his, index) in historys">
-                    <a href="javascript:void(0)" @click="restore(his, his.response)"  > {{his.name}}</a>
+                    <a style="padding: 0px" href="javascript:void(0)" @click="restore(his, his.response)"  > {{his.name}}</a>
 
                     <svg class="icon" @click="remove(his, index, false)">
                       <use xlink:href="svg/icon.svg#trash"></use>
@@ -517,6 +522,10 @@ offset: RANDOM_INT(0, 5)  // 随机范围取值
                     <input id="vCount" v-model="count" style="width: 30px;text-align: center"  type="number" @keyup="doOnKeyUp(event, 'document', true)" />
                     <a >条</a>
                 </div>
+
+                <ul class="dropdown-menu" id="vOption" style="display: block; left: 0px; top: 0px; max-height: 100%; max-width: 100%; overflow: scroll; overflow-x: scroll; overflow-y:scroll;" v-show="options != null && options.length > 0">
+                  <li class="dropdown-item" style="width: 100%" :style="{'color': (index == selectIndex ? 'orangered' : 'black')}" v-for="(item, index) in options" :id="'option' + index" @click="onClickSelectInput(item, index)" >{{StringUtil.get(item.name) + ': ' + StringUtil.get(item.type) + ', ' + StringUtil.trim(item.comment)}}</li>
+                </ul>
             </div>
 
 
@@ -547,7 +556,7 @@ offset: RANDOM_INT(0, 5)  // 随机范围取值
             <use xlink:href="svg/icon.svg#close"></use>
         </svg>
 
-        <input type="text" placeholder="请输入名称" v-model="history.name" />
+        <input type="text" placeholder="请输入" v-model="history.name" />
         <button   @click="save()" >保存</button>
     </div>
 
@@ -570,7 +579,7 @@ offset: RANDOM_INT(0, 5)  // 随机范围取值
             <use xlink:href="svg/icon.svg#close"></use>
         </svg>
 
-        <input type="text" placeholder="请输入名称" v-model="exTxt.name" />
+        <input type="text" placeholder="请输入" v-model="exTxt.name" />
         <button @click="saveConfig()">{{ exTxt.button || '切换' }}</button>
     </div>
 
@@ -783,10 +792,12 @@ offset: RANDOM_INT(0, 5)  // 随机范围取值
   var vType = document.getElementById("vType");
   var vSend = document.getElementById("vSend");
 
+  var vOption = document.getElementById("vOption");
   var vInput = document.getElementById("vInput");
   var vWarning = document.getElementById("vWarning");
   var vComment = document.getElementById("vComment");
   var vHeader = document.getElementById("vHeader");
+  var vScript = document.getElementById("vScript");
   var vRandom = document.getElementById("vRandom");
   var vOutput = document.getElementById("vOutput");
 

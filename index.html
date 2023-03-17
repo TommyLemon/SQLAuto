@@ -371,6 +371,44 @@ offset: RANDOM_INT(0, 5) // 随机范围取值
 // Ctrl + S 或 Command + S 保存当前请求；
                         </textarea>
                     </div>
+                  <div v-show="isScriptShow" style="width: 100%; height: 240px; position: relative;" >
+                    <div class="left-bar" style="border-top: #DDD 1px solid; position: relative">
+                      <a href="javascript:void(0)" @click="changeScriptType('case')" :style="{'color': scriptType == 'case' ? 'red' : 'gray'}" style="padding-left: 10px; font-size: medium">用例</a><a v-show="getCurrentAccountId() != null">|<a v-show="getCurrentAccountId() != null" href="javascript:void(0)" @click="changeScriptType('account')" :style="{'color': scriptType == 'account' ? 'red' : 'gray'}" style="font-size: medium">账号</a></a><a>|</a><a href="javascript:void(0)" @click="changeScriptType('global')" :style="{'color': scriptType == 'global' ? 'red' : 'gray'}" style="font-size: medium">全局</a><a href="javascript:void(0)" @click="changeScriptPriority(true)" :style="{'color': isPreScript ? 'red' : 'gray'}" style="font-size: medium; padding-left: 10px">前置</a><a>|</a><a href="javascript:void(0)" @click="changeScriptPriority(false)" :style="{'color': isPreScript ? 'gray' : 'red'}" style="font-size: medium">后置</a><a style="display: flex;flex-grow: 1;padding-left: 10px;font-size: medium;color: black">执行脚本 JavaScript</a>
+                      <a class="hint--top @cli-tool" style="font-size: small;" data-hint="测试" href="javascript:void(0)" @click="onClickTestScript()">
+                        <img class="icon" src="img/refresh.png"/>
+                      </a>
+                      <a class="hint--top @cli-tool" data-hint="添加脚本" style="font-size:xx-large; margin-bottom: 2px; color: black;"
+                         href="javascript:void(0)" @click="showExport(true, true, false, true)"> + </a>
+                      <a v-show="false" href="javascript:void(0)" style="font-size: small;" class="hint--top"  data-hint="上传/分享"  @click="showExport(true, true)">
+                        <svg class="icon">
+                          <use xlink:href="svg/icon.svg#share"></use>
+                        </svg>
+                      </a>
+                      <a class="hint--top @cli-tool" data-hint="隐藏" style="float: right; padding: 8px; margin-top: 2px; height: 100%"  href="javascript:void(0)" @click="showConfig(false, 13)">
+                        <svg class="icon close-icon"  >
+                          <use xlink:href="svg/icon.svg#close"></use>
+                        </svg>
+                      </a>
+                    </div>
+
+                    <!--        v-model  不允许调用方法            -->
+                    <template v-if="scripts[scriptType][scriptBelongId]">
+                    <textarea id="vScript" style="width: 100%;height: 100%;" wrap="off"
+                              v-model="scripts[scriptType][scriptBelongId][isPreScript ? 'pre' : 'post'].script"
+                              placeholder="// JavaScript 脚本
+// 逻辑代码 ..
+
+function fun(arg0, arg1, arg2..) {
+  // TODO 获取 token 或 自定义断言 等逻辑
+}
+fun(true, 1, 'a'..);
+
+// .. 逻辑代码
+">
+                        </textarea>
+                    </template>
+                  </div>
+
                 </div>
             </div>
         </div>

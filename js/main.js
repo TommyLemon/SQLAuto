@@ -683,6 +683,7 @@ https://github.com/Tencent/APIJSON/issues
   var baseUrl
   var inputted
   var handler
+  var errHandler
   // var lastRes
   var gridHandler
   var docObj
@@ -4931,8 +4932,14 @@ https://github.com/Tencent/APIJSON/issues
 
         try {
           this.parseRandom(vInput.value, vHeader.value, -1, true, false, false, function (randomName, constConfig, constJson) {
+            
             vOutput.value = "requesting... \nURL = " + url
             App.view = 'output';
+            errHandler = function () {
+              vOutput.value = "requesting... \nURL = " + url + "\n\n可能" + ERR_MSG
+            }
+            setTimeout(errHandler, 5000)
+
             var req = Object.assign(constJson, {
               uri: url
             })

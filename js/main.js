@@ -2261,6 +2261,8 @@ https://github.com/Tencent/APIJSON/issues
             inputObj.code = code_
           }
 
+          const isML = this.isMLEnabled;
+
           var rawRspStr = JSON.stringify(currentResponse || {})
           const code = currentResponse.code;
           const thrw = currentResponse.throw;
@@ -2270,7 +2272,6 @@ https://github.com/Tencent/APIJSON/issues
           var rsp = JSON.parse(JSON.stringify(currentResponse || {}))
           rsp = JSONResponse.array2object(rsp, 'args', ['args'], true)
 
-          const isML = this.isMLEnabled;
           const stddObj = isML ? JSONResponse.updateStandard({}, rsp) : {};
           stddObj.code = code;
           stddObj.throw = thrw;
@@ -3895,13 +3896,27 @@ https://github.com/Tencent/APIJSON/issues
           this.showDoc()
         }
 
-        this.randoms = (this.currentRemoteItem || {}).randoms || []
+        var randoms = []
+        if (this.randomPage == 0 && ! isSub) {
+          randoms = (this.currentRemoteItem || {}).randoms || []
+        }
+        else if (this.randomSubPage == 0 && isSub) {
+          randoms = (this.currentRandomItem || {}).subs || []
+        }
+
+        if (isSub) {
+          this.randomSubs = randoms
+        }
+        else {
+          this.randoms = randoms
+        }
+
         this.getCurrentRandomSummary().summaryType = 'total' // this.onClickSummary('total', true)
         if (! this.isRandomSummaryShow()) {
           this.showCompare4RandomList(show, isSub)
         }
 
-        if (show && this.isRandomShow && this.randoms.length <= 0 && item != null && item.id != null) {
+        if (show && this.isRandomShow && randoms.length <= 0 && item != null && item.id != null) {
           this.isRandomListShow = false
 
           var subSearch = StringUtil.isEmpty(this.randomSubSearch, true)
@@ -5829,15 +5844,18 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
             this.saveCache(this.server, 'randomPage', this.randomPage)
             this.saveCache(this.server, 'randomCount', this.randomCount)
 
+            var cri = this.currentRemoteItem || {}
+            cri.randoms = null
             this.randoms = null
-            this.showRandomList(true, (this.currentRemoteItem || {}).Document, false)
+            this.showRandomList(true, cri.Document, false)
             break
           case 'randomSub':
             this.saveCache(this.server, 'randomSubPage', this.randomSubPage)
             this.saveCache(this.server, 'randomSubCount', this.randomSubCount)
 
+            var cri = this.currentRandomItem || {}
             this.randomSubs = null
-            this.showRandomList(true, (this.currentRemoteItem || {}).Random, true)
+            this.showRandomList(true, cri.Random, true)
             break
           default:
             docObj = null
@@ -6445,10 +6463,15 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
         return column == null ? '' : column.column_name
       },
 
+      getQuote: function (db) {
+        return CodeUtil.getQuote(db || this.database)
+      },
+
       onClickPost: function (tableIndex, tableName, schemaName) {
         tableName = tableName || this.getTableName(tableIndex)
 
-        var s = 'INSERT INTO ' + (isSingle ? tableName : '`' + tableName + '`') + '\n  ('
+        var q = this.getQuote()
+        var s = 'INSERT INTO ' + (isSingle ? tableName : q + tableName + q) + '\n  ('
         var v = '\nVALUES('
 
         var columnList = this.getColumnList(tableIndex)
@@ -6460,7 +6483,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
               continue;
             }
 
-            s += (j <= 0 ? '' : ', ') + (isSingle ? name : '`' + name + '`')
+            s += (j <= 0 ? '' : ', ') + (isSingle ? name : q + name + q)
 
             var val = column.column_default
             if (val == null) {
@@ -6486,6 +6509,8 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
 
       onClickGet: function (tableIndex, tableName, schemaName) {
         tableName = tableName || this.getTableName(tableIndex)
+
+        var q = this.getQuote()
         var s = 'SELECT '
         var v = '\nWHERE ('
 
@@ -6498,7 +6523,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
               continue;
             }
 
-            s += (j <= 0 ? '' : ', ') + (isSingle ? name : '`' + name + '`')
+            s += (j <= 0 ? '' : ', ') + (isSingle ? name : q + name + q)
 
             var val = column.column_default
             if (val == null) {
@@ -6512,12 +6537,12 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
             }
 
             var isStr = typeof val == 'string'
-            v += (j <= 0 ? '\n  ' : '\n  AND ') + (isSingle ? name : '`' + name + '`') + (val == null ? ' IS NULL ' : ' = ' + (isStr ? "'" + val.replaceAll("'", "\\'") + "'" : val))
+            v += (j <= 0 ? '\n  ' : '\n  AND ') + (isSingle ? name : q + name + q) + (val == null ? ' IS NULL ' : ' = ' + (isStr ? "'" + val.replaceAll("'", "\\'") + "'" : val))
           }
         }
 
         v += '\n)'
-        s += '\nFROM ' + (isSingle ? tableName : '`' + tableName + '`') + v
+        s += '\nFROM ' + (isSingle ? tableName : q + tableName + q) + v
           + '\n# GROUP BY userId'
           + '\n# HAVING avg(id)>10'
           + '\n# ORDER BY id DESC'
@@ -6530,7 +6555,8 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
       onClickPut: function (tableIndex, tableName, schemaName) {
         tableName = tableName || this.getTableName(tableIndex)
 
-        var s = 'UPDATE ' + (isSingle ? tableName : '`' + tableName + '`') + '\nSET '
+        var q = this.getQuote()
+        var s = 'UPDATE ' + (isSingle ? tableName : q + tableName + q) + '\nSET '
         var v = '\nWHERE ('
 
         var columnList = this.getColumnList(tableIndex)
@@ -6556,8 +6582,8 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
             var isStr = typeof val == 'string'
             var valStr = (val == null ? 'NULL' : (isStr ? "'" + val.replaceAll("'", "\\'") + "'" : val))
 
-            s += (j <= 0 ? '\n  ' : ',\n  ') + (isSingle ? name : '`' + name + '`') + ' = ' + valStr
-            v += (j <= 0 ? '\n  ' : '\n  AND ') + (isSingle ? name : '`' + name + '`') + (val == null ? ' IS NULL ' : ' = ' + valStr)
+            s += (j <= 0 ? '\n  ' : ',\n  ') + (isSingle ? name : q + name + q) + ' = ' + valStr
+            v += (j <= 0 ? '\n  ' : '\n  AND ') + (isSingle ? name : q + name + q) + (val == null ? ' IS NULL ' : ' = ' + valStr)
           }
         }
 
@@ -6570,7 +6596,8 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
       onClickDelete: function (tableIndex, tableName, schemaName) {
         tableName = tableName || this.getTableName(tableIndex)
 
-        var s = 'DELETE FROM ' + (isSingle ? tableName : '`' + tableName + '`')
+        var q = this.getQuote()
+        var s = 'DELETE FROM ' + (isSingle ? tableName : q + tableName + q)
         var v = '\nWHERE ('
 
         var columnList = this.getColumnList(tableIndex)
@@ -6594,7 +6621,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
             }
 
             var isStr = typeof val == 'string'
-            v += (j <= 0 ? '\n  ' : '\n  AND ') + (isSingle ? name : '`' + name + '`') + (val == null ? ' IS NULL ' : ' = ' + (isStr ? "'" + val.replaceAll("'", "\\'") + "'" : val))
+            v += (j <= 0 ? '\n  ' : '\n  AND ') + (isSingle ? name : q + name + q) + (val == null ? ' IS NULL ' : ' = ' + (isStr ? "'" + val.replaceAll("'", "\\'") + "'" : val))
           }
         }
 
@@ -7061,21 +7088,27 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
             // }
 
             App[testSubList ? 'currentRandomSubIndex' : 'currentRandomIndex'] = index
-            this.testRandomSingle(show, false, itemAllCount > 1 && ! testSubList, item, this.type, url, json, {}, isCross, function (url, res, err) {
-              var data = null
-              if (res instanceof Object) {  // 可能通过 onTestResponse 返回的是 callback(true, 18, null)
-                data = res.data
-                try {
-                  App.onResponse(url, res, err)
-                  App.log('test  App.request >> res.data = ' + (data == null ? 'null' : JSON.stringify(data, null, '  ')))
-                } catch (e) {
-                  App.log('test  App.request >> } catch (e) {\n' + e.message)
-                }
-              }
 
-              App.compareResponse(allCount, list, index, item, data, true, App.currentAccountIndex, false, err, null, isCross, callback)
-              return true
-            })
+            try {
+              this.testRandomSingle(show, false, itemAllCount > 1 && !testSubList, item, this.type, url, json, {}, isCross, function (url, res, err) {
+                var data = null
+                if (res instanceof Object) {  // 可能通过 onTestResponse 返回的是 callback(true, 18, null)
+                  data = res.data
+                  try {
+                    App.onResponse(url, res, err)
+                    App.log('test  App.request >> res.data = ' + (data == null ? 'null' : JSON.stringify(data, null, '  ')))
+                  } catch (e) {
+                    App.log('test  App.request >> } catch (e) {\n' + e.message)
+                  }
+                }
+
+                App.compareResponse(allCount, list, index, item, data, true, App.currentAccountIndex, false, err, null, isCross, callback)
+                return true
+              })
+            }
+            catch (e) {
+              this.compareResponse(allCount, list, index, item, data, true, this.currentAccountIndex, false, e, null, isCross, callback)
+            }
           }
         }
       },
@@ -7177,7 +7210,9 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
                 }
                 else {
                   // header 目前不是 JSONObject 不适合传参 App.request(false, type, url, constJson, header, cb);
-                  App.request(false, REQUEST_TYPE_JSON, App.server + '/sql/execute', constJson, {}, cb, caseScript, null, null, true);
+                  App.request(false, REQUEST_TYPE_JSON, App.server + '/sql/execute', Object.assign(constJson, {
+                    uri: url
+                  }), {}, cb, caseScript, null, null, true);
                 }
               }
 
@@ -7380,6 +7415,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
         // alert('< sql = ' + JSON.stringify(json, null, '    '))
         var lastVarIndex = -1;
 
+        const q = this.getQuote()
         for (let i = 0; i < reqCount; i ++) {
           const which = i;
           const lineItem = lines[i] || '';
@@ -7391,7 +7427,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
           if (line.length <= 0) {
             respCount ++;
             if (i >= lines.length - 1 && respCount >= reqCount) {
-              code += 'return `' + sql.replaceAll('`', '\\`') + '`;'
+              code += 'return ' + q + sql.replaceAll(q, '\\' + q) + q + ';'
               sql = eval('(function() {\n' + code + '\n})()')
               var json = {
                 sql: sql,
@@ -7495,7 +7531,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
 
             respCount ++;
             if (respCount >= reqCount) {
-              code += 'return `' + sql.replaceAll('`', '\\`') + '`;'
+              code += 'return ' + q + sql.replaceAll(q, '\\' + q) + q + ';'
               sql = eval('(function() {\n' + code + '\n})()')
               var json = {
                 sql: sql,
@@ -7885,9 +7921,9 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
           const document = item == null ? null : item.Document
           if (document == null || document.name == null) {
             if (isRandom) {
-              App.randomDoneCount ++
+              App.randomDoneCount++
             } else {
-              App.doneCount ++
+              App.doneCount++
             }
             continue
           }
@@ -7917,58 +7953,63 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
           const curUri = baseUrl + document.url
           const otherUri = isHttp ? curUri : otherBaseUri + document.url
 
-          this.parseRandom(document.sqlauto, document.header, -1
-              , true, false, false, function (randomName, constConfig, constJson) {
-            App.request(false, type, url, Object.assign(constJson, {
-              uri: isEnvCompare ? otherUri : curUri
-            }), {}, function (url, res, err) {
-              if (isEnvCompare != true) {
-                App.compareResponse(allCount, list, index, item, res.data, isRandom, accountIndex, false, err, null, isCross, callback)
-                return
-              }
-
-              if (callback == null) {
-                try {
-                  App.onResponse(url, res, err)
-                  if (DEBUG) {
-                    App.log('test  App.request >> res.data = ' + JSON.stringify(res.data, null, '  '))
-                  }
-                } catch (e) {
-                  App.log('test  App.request >> } catch (e) {\n' + e.message)
-                }
-
-              }
-
-              const otherErr = err
-              const rsp = App.removeDebugInfo(res.data)
-              const rspStr = JSON.stringify(rsp)
-              const tr = item.TestRecord || {}
-              if (isMLEnabled) {
-                tr.response = rspStr
-              }
-              tr[standardKey] = isMLEnabled ? JSON.stringify(JSONResponse.updateFullStandard({}, rsp, isMLEnabled)) : rspStr // res.data
-              item.TestRecord = tr
-
-              App.request(false, type, apiUrl, Object.assign(constJson, {
-                uri: curUri
-              }), header, function (url, res, err) {
-                if (callback == null) {
-                  try {
-                    App.onResponse(url, res, err)
-                    if (DEBUG) {
-                      App.log('test  App.request >> res.data = ' + JSON.stringify(res.data, null, '  '))
+          try {
+            this.parseRandom(document.sqlauto, document.header, -1
+                , true, false, false, function (randomName, constConfig, constJson) {
+                  App.request(false, type, url, Object.assign(constJson, {
+                    uri: isEnvCompare ? otherUri : curUri
+                  }), {}, function (url, res, err) {
+                    if (isEnvCompare != true) {
+                      App.compareResponse(allCount, list, index, item, res.data, isRandom, accountIndex, false, err, null, isCross, callback)
+                      return
                     }
-                  } catch (e) {
-                    App.log('test  App.request >> } catch (e) {\n' + e.message)
-                  }
-                }
 
-                App.compareResponse(allCount, list, index, item, res.data, isRandom, accountIndex, false, err || otherErr, null, isCross, callback)
-              }, caseScript)
+                    if (callback == null) {
+                      try {
+                        App.onResponse(url, res, err)
+                        if (DEBUG) {
+                          App.log('test  App.request >> res.data = ' + JSON.stringify(res.data, null, '  '))
+                        }
+                      } catch (e) {
+                        App.log('test  App.request >> } catch (e) {\n' + e.message)
+                      }
 
-            }, caseScript)
+                    }
 
-          })
+                    const otherErr = err
+                    const rsp = App.removeDebugInfo(res.data)
+                    const rspStr = JSON.stringify(rsp)
+                    const tr = item.TestRecord || {}
+                    if (isMLEnabled) {
+                      tr.response = rspStr
+                    }
+                    tr[standardKey] = isMLEnabled ? JSON.stringify(JSONResponse.updateFullStandard({}, rsp, isMLEnabled)) : rspStr // res.data
+                    item.TestRecord = tr
+
+                    App.request(false, type, apiUrl, Object.assign(constJson, {
+                      uri: curUri
+                    }), header, function (url, res, err) {
+                      if (callback == null) {
+                        try {
+                          App.onResponse(url, res, err)
+                          if (DEBUG) {
+                            App.log('test  App.request >> res.data = ' + JSON.stringify(res.data, null, '  '))
+                          }
+                        } catch (e) {
+                          App.log('test  App.request >> } catch (e) {\n' + e.message)
+                        }
+                      }
+
+                      App.compareResponse(allCount, list, index, item, res.data, isRandom, accountIndex, false, err || otherErr, null, isCross, callback)
+                    }, caseScript)
+
+                  }, caseScript)
+
+                })
+          }
+          catch(e) {
+            this.compareResponse(allCount, list, index, item, null, isRandom, accountIndex, false, e, null, isCross, callback)
+          }
         }
       },
 

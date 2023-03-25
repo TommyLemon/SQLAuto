@@ -17,6 +17,7 @@ if (typeof window == 'undefined') {
     eval(`
       var StringUtil = require("./StringUtil");
       var JSONObject = require("./JSONObject");
+      var JSON5 = require('json5');
     `)
   } catch (e) {
     console.log(e)
@@ -34,18 +35,35 @@ var CodeUtil = {
   LANGUAGE_KOTLIN: 'Kotlin',
   LANGUAGE_JAVA: 'Java',
   LANGUAGE_C_SHARP: 'C#',
-
   LANGUAGE_SWIFT: 'Swift',
   LANGUAGE_OBJECTIVE_C: 'Objective-C',
-
   LANGUAGE_GO: 'Go',
   LANGUAGE_C_PLUS_PLUS: 'C++',
-
   LANGUAGE_TYPE_SCRIPT: 'TypeScript',
   LANGUAGE_JAVA_SCRIPT: 'JavaScript',
-
   LANGUAGE_PHP: 'PHP',
   LANGUAGE_PYTHON: 'Python',
+
+  DATABASE_MYSQL: 'MYSQL',
+  DATABASE_POSTGRESQL: 'POSTGRESQL',
+  DATABASE_SQLITE: 'SQLITE',
+  DATABASE_ORACLE: 'ORACLE',
+  DATABASE_SQLSERVER: 'SQLSERVER',
+  DATABASE_DB2: 'DB2',
+  DATABASE_DAMENG: 'DAMENG',
+  DATABASE_KINGBASE: 'KINGBASE',
+  DATABASE_TIDB: 'TIDB',
+  DATABASE_TDENGINE: 'TDENGINE',
+  DATABASE_NEBULA: 'NEBULA',
+  DATABASE_PRESTO: 'PRESTO',
+  DATABASE_TRINO: 'TRINO',
+  DATABASE_INFLUXDB: 'INFLUXDB',
+  DATABASE_CLICKHOUSE: 'CLICKHOUSE',
+  DATABASE_ELASTICSEARCH: 'ELASTICSEARCH',
+  DATABASE_REDIS: 'REDIS',
+  DATABASE_KAFKA: 'KAFKA',
+  DATABASE_MARIADB: 'MARIADB',
+  DATABASE_HIVE: 'HIVE',
 
   type: 'JSON',
   database: 'MYSQL',
@@ -57,6 +75,9 @@ var CodeUtil = {
   thirdParty: 'YAPI',
   thirdPartyApiMap: null,  // {}
 
+  getQuote: function (db) {
+    return [CodeUtil.DATABASE_MYSQL, CodeUtil.DATABASE_MARIADB, CodeUtil.DATABASE_TIDB, CodeUtil.DATABASE_CLICKHOUSE, CodeUtil.DATABASE_TDENGINE].indexOf(db || CodeUtil.database) >= 0 ? '`' : '"';
+  },
 
   /**生成JSON的注释
    * @param reqStr //已格式化的JSON String
@@ -5883,7 +5904,7 @@ var CodeUtil = {
     OWNER: '拥有者',
     ADMIN: '管理员'
   },
-  DATABASE_KEYS: ['MYSQL', 'POSTGRESQL', 'SQLSERVER', 'ORACLE', 'DB2', 'DAMENG', 'CLICKHOUSE', 'SQLITE', 'TDENGINE'],
+  DATABASE_KEYS: ['MYSQL', 'POSTGRESQL', 'SQLSERVER', 'ORACLE', 'DB2', 'DAMENG', 'KINGBASE', 'MARIADB', 'SQLITE', 'INFLUXDB', 'TDENGINE', 'PRESTO', 'TRINO', 'HIVE', 'TIDB', 'CLICKHOUSE', 'ELASTICSEARCH', 'REDIS'], // , 'KAFKA'],
 
   getComment4Function: function (funCallStr, method, language) {
     if (typeof funCallStr != 'string') {

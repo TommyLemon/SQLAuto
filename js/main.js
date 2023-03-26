@@ -1171,8 +1171,8 @@ https://github.com/Tencent/APIJSON/issues
         //   return jsonlint.parse(s);
         // }
         // catch (e) {
-        //   log('main.getRequest', 'try { return jsonlint.parse(s); \n } catch (e2) {\n' + e.message)
-        //   log('main.getRequest', 'return jsonlint.parse(this.removeComment(s));')
+        //   log('main.getRequest', 'try { return jsonlint.parse(s); \n } catch (e) {\n' + e.message)
+        //   log('main.getRequest', 'return JSON5.parse(s);')
         //   return JSON5.parse(s);  // jsonlint.parse(this.removeComment(s));
         // }
       },
@@ -7158,80 +7158,86 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
 
           const which = i;
           var rawConfig = testSubList && i < existCount ? ((subs[i] || {}).Random || {}).config : random.config
-          this.parseRandom(
-            sql, rawConfig, random.id
-            , ! testSubList, count == 1 || (testSubList && i >= existCount), testSubList && i >= existCount
-            , function (randomName, constConfig, constJson) {
+          
+          var cb = function (url, res, err) {
+            if (callback != null) {
+              callback(url, res, err, random)
+            }
+            else {
+              App.onResponse(url, res, err)
+            }
+          };
+                  
+          try {
+            this.parseRandom(
+              sql, rawConfig, random.id
+              , ! testSubList, count == 1 || (testSubList && i >= existCount), testSubList && i >= existCount
+              , function (randomName, constConfig, constJson) {
 
-              respCount ++;
+                respCount ++;
 
-              if (testSubList) {  //在原来已上传的基础上，生成新的
-                if (which >= existCount) {
-                  //异步导致顺序错乱 subs.push({
-                  subs[which] = {
-                    Random: {
-                      id: -i - 1, //表示未上传
-                      toId: random.id == null ? 1 : random.id,  // 1 为了没选择测试用例时避免用 toId 判断子项错误
-                      userId: random.userId,
-                      documentId: random.documentId,
-                      count: 1,
-                      name: randomName || 'Temp ' + i,
-                      config: constConfig
-                    },
-                    //不再需要，因为子项里前面一部分就是已上传的，而且这样更准确，交互更直观
-                    // TestRecord: {  //解决子项始终没有对比标准
-                    //   id: 0, //不允许子项撤回 tr.id, //表示未上传
-                    //   userId: random.userId,
-                    //   documentId: random.documentId,
-                    //   testAccountId: tr.testAccountId,
-                    //   randomId: -i - 1,
-                    //   response: tr.response,
-                    //   standard: tr.standard,
-                    //   date: tr.date,
-                    //   compare: tr.compare
-                    // }
-                  // })
-                  };
-                }
-              }
-              else {
-                var cb = function (url, res, err) {
-                  if (callback != null) {
-                    callback(url, res, err, random)
+                if (testSubList) {  //在原来已上传的基础上，生成新的
+                  if (which >= existCount) {
+                    //异步导致顺序错乱 subs.push({
+                    subs[which] = {
+                      Random: {
+                        id: -i - 1, //表示未上传
+                        toId: random.id == null ? 1 : random.id,  // 1 为了没选择测试用例时避免用 toId 判断子项错误
+                        userId: random.userId,
+                        documentId: random.documentId,
+                        count: 1,
+                        name: randomName || 'Temp ' + i,
+                        config: constConfig
+                      },
+                      //不再需要，因为子项里前面一部分就是已上传的，而且这样更准确，交互更直观
+                      // TestRecord: {  //解决子项始终没有对比标准
+                      //   id: 0, //不允许子项撤回 tr.id, //表示未上传
+                      //   userId: random.userId,
+                      //   documentId: random.documentId,
+                      //   testAccountId: tr.testAccountId,
+                      //   randomId: -i - 1,
+                      //   response: tr.response,
+                      //   standard: tr.standard,
+                      //   date: tr.date,
+                      //   compare: tr.compare
+                      // }
+                    // })
+                    };
                   }
-                  else {
-                    App.onResponse(url, res, err)
-                  }
-                };
-
-                if (show == true) {
-                  vHeader.value = constConfig;
-                  App.send(false, cb);
                 }
                 else {
-                  // header 目前不是 JSONObject 不适合传参 App.request(false, type, url, constJson, header, cb);
-                  App.request(false, REQUEST_TYPE_JSON, App.server + '/sql/execute', Object.assign(constJson, {
-                    uri: url
-                  }), {}, cb, caseScript, null, null, true);
+                  if (show == true) {
+                    vHeader.value = constConfig;
+                    App.send(false, cb);
+                  }
+                  else {
+                    // header 目前不是 JSONObject 不适合传参 App.request(false, type, url, constJson, header, cb);
+                    App.request(false, REQUEST_TYPE_JSON, App.server + '/sql/execute', Object.assign(constJson, {
+                      uri: url
+                    }), {}, cb, caseScript, null, null, true);
+                  }
                 }
-              }
 
-              if (testSubList && respCount >= count) { // && which >= count - 1) {
-                if (App.currentRandomItem == null) {
-                  App.currentRandomItem = {}
+                if (testSubList && respCount >= count) { // && which >= count - 1) {
+                  if (App.currentRandomItem == null) {
+                    App.currentRandomItem = {}
+                  }
+                  App.randomSubs = App.currentRandomItem.subs = subs
+                  App.getCurrentRandomSummary().summaryType = 'total' // App.onClickSummary('total', true)
+                  if (App.isRandomListShow == true) {
+                    App.resetCount(item, true, App.currentAccountIndex)
+                    item.subs = subs
+                  }
+                  App.testRandom(false, false, true, count, isCross, callback)
                 }
-                App.randomSubs = App.currentRandomItem.subs = subs
-                App.getCurrentRandomSummary().summaryType = 'total' // App.onClickSummary('total', true)
-                if (App.isRandomListShow == true) {
-                  App.resetCount(item, true, App.currentAccountIndex)
-                  item.subs = subs
-                }
-                App.testRandom(false, false, true, count, isCross, callback)
-              }
 
-            },
-            preScript
-          );
+              },
+              preScript
+            );
+          }
+          catch (e) {
+            cb(url, {}, e)
+          }
 
         }  // for
 

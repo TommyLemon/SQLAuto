@@ -6645,6 +6645,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
         this.urlComment = ''
         vInput.value = StringUtil.trim(sql)
         vHeader.value = ''  // TODO 生成完整的，不过都用注释形式
+        this.showTestCase(false, this.isLocalShow)
         this.onChange(false)
       },
 

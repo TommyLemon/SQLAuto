@@ -51,6 +51,25 @@ name: 'Test ' + new Date().toLocaleTimeString()  // 通过代码自定义
 DemoSQLConfig 改下 getDBAccount, getDBUri 等返回值，具体见 <br /> 
 https://github.com/APIJSON/APIJSON-Demo/tree/master/APIJSON-Java-Server
 
+<br />
+
+### 新增测试用例
+可以使用以下几种方式：
+#### 1.点击右侧数据字典文档表名后面的 SELECT INSERT UPDATE DELETE 来生成左侧 SQL 语句
+http://apijson.cn/sql
+
+#### 2.调用 /delegate 代理接口来录制请求的方法、参数、响应等信息
+https://github.com/APIJSON/APIJSON-Demo/tree/master/APIJSON-Java-Server/APIJSONBoot-MultiDataSource#%E4%BB%A3%E7%90%86%E6%8E%A5%E5%8F%A3%E5%8F%8A%E5%BD%95%E5%88%B6%E6%B5%81%E9%87%8F
+
+#### 3.打开分享链接来自动填充 数据库 URI、SQL 语句、预编译参数、设置项 等
+例如：
+http://apijson.cn/sql/?send=true&type=JSON&url=jdbc%3Amysql%3A%2F%2Flocalhost%3A3306%2Fsys&json=SELECT%20*%20FROM%20Comment%20LIMIT%2010
+
+#### 4.在界面手动填写 数据库 URI、SQL 语句、预编译参数 等再点击上传/分享按钮
+可点击分享按钮生成分享链接，用浏览器打开即可自动填充。
+
+<br />
+
 ### 后台 Headless 无 UI 模式回归测试
 Jenkins、蓝盾 等 CI/CD 等流水线不支持带 UI 测试，所以提供了这个模式， <br />
 通过调用 HTTP API 即可执行用例和查看进度，方便集成到 CI/CD 流水线。

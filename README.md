@@ -63,7 +63,7 @@ https://github.com/APIJSON/APIJSON-Demo/tree/master/APIJSON-Java-Server/APIJSONB
 
 #### 3.打开分享链接来自动填充 数据库 URI、SQL 语句、预编译参数、设置项 等
 例如：
-http://apijson.cn/sql/?send=true&type=JSON&url=jdbc%3Amysql%3A%2F%2Flocalhost%3A3306%2Fsys&json=SELECT%20*%20FROM%20Comment%20LIMIT%2010
+http://apijson.cn/sql/?send=true&type=JSON&url=jdbc%3Amysql%3A%2F%2Flocalhost%3A3306%2Fsys&json=SELECT%20*%20FROM%20Comment%20LIMIT%2010&header=
 
 #### 4.在界面手动填写 数据库 URI、SQL 语句、预编译参数 等再点击上传/分享按钮
 可点击分享按钮生成分享链接，用浏览器打开即可自动填充。

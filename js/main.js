@@ -7566,7 +7566,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
         // alert('< sql = ' + JSON.stringify(json, null, '    '))
         var lastVarIndex = -1;
 
-        const q = this.getQuote()
+        const q = '`'; // 只能用反引号，因为很可能有换行，需要 eval return  this.getQuote()
         for (let i = 0; i < reqCount; i ++) {
           const which = i;
           const lineItem = lines[i] || '';

@@ -653,10 +653,10 @@ https://github.com/Tencent/APIJSON/issues
   function orderIn(desc, index, ...args) {
     // alert('orderIn  index = ' + index + '; args = ' + JSON.stringify(args));
     index = index || 0;
-    return args == null || args.length <= index ? null : args[desc ? args.length - index : index];
+    return args == null || args.length <= index ? null : args[desc ? args.length - 1 - index : index];
   }
 
-  function getOrderIndex(randomId, line, argCount) {
+  function getOrderIndex(randomId, line, argCount, step) {
     // alert('randomId = ' + randomId + '; line = ' + line + '; argCount = ' + argCount);
     // alert('ORDER_MAP = ' + JSON.stringify(ORDER_MAP, null, '  '));
 
@@ -676,10 +676,16 @@ https://github.com/Tencent/APIJSON/issues
     if (orderIndex == null || orderIndex < -1) {
       orderIndex = -1;
     }
+    if (argCount == null) {
+      argCount = 0;
+    }
+    if (step == null) {
+      step = 1;
+    }
 
     orderIndex ++
-    orderIndex = argCount == null || argCount <= 0 ? orderIndex : orderIndex%argCount;
     ORDER_MAP[randomId][line] = orderIndex;
+    orderIndex = argCount <= 0 ? step*orderIndex : (step*orderIndex)%argCount;
 
     // alert('orderIndex = ' + orderIndex)
     // alert('ORDER_MAP = ' + JSON.stringify(ORDER_MAP, null, '  '));
@@ -7533,8 +7539,8 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
 
           newSql += '\n' + line
         }
-        if (newSql.length > 0) {
-          sql = newSql
+        if (StringUtil.isNotEmpty(newSql, true)) {
+          sql = StringUtil.trim(newSql)
         }
 
         var args = []
@@ -7831,9 +7837,10 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
               }
 
               toEval = (fun == ORDER_IN ? 'orderIn' : 'orderInt')
-                + '(' + isDesc + ', ' + step*getOrderIndex(
+                + '(' + isDesc + ', ' + getOrderIndex(
                   randomId, line
                   , fun == ORDER_INT ? 0 : StringUtil.split(value.substring(start + 1, end)).length
+                  , step
                 ) + ', ' + value.substring(start + 1);
             }
             else {  //随机函数
@@ -8069,8 +8076,9 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
         const url = isEnvCompare && isHttp ? otherBaseUri + '/sql/execute' : apiUrl
 
         for (var i = 0; i < allCount; i++) {
+          const index = i
+          const item = list[i]
           try {
-            const item = list[i]
             const document = item == null ? null : item.Document
             if (document == null || document.name == null) {
               if (isRandom) {
@@ -8088,8 +8096,6 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
             if (DEBUG) {
               this.log('test  document = ' + JSON.stringify(document, null, '  '))
             }
-
-            const index = i
 
             var hdr = null
             try {

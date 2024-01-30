@@ -2,7 +2,8 @@
   SQLAuto
 </h1>
  
-<p align="center">☔ 智能零代码测试 SQL、任意增删改查、任意 SQL 模板变量、一键批量生成参数组合、快速构造大量测试数据</p>
+<p align="center">☔ 智能零代码测试 SQL、任意增删改查、任意 SQL 模板变量、一键批量生成参数组合、快速构造大量测试数据。<br />用户包含 某市值 4000亿+ 500 强巨头、某营收数十亿企业、某热门数据库创业公司 等多家大中小企业。</p>
+
 
 <p align="center" >
   <a href="https://github.com/TommyLemon/SQLAuto#%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B">快速上手</a>

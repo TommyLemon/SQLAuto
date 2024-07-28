@@ -196,5 +196,5 @@ https://github.com/TommyLemon/SQLAuto/commits/master
 
 
 ### 我要赞赏
-创作不易，右上角点 ⭐Star 支持下本项目吧，谢谢 ^_^ <br />
+创作不易、坚持更难，右上角点亮 ⭐Star 支持下本项目吧，谢谢 ^_^ <br />
 https://gitee.com/TommyLemon/SQLAuto

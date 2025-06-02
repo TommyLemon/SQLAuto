@@ -6,9 +6,11 @@
 
 
 <p align="center" >
+  <a href="https://deepwiki.com/TommyLemon/SQLAuto">English</a>
   <a href="https://github.com/TommyLemon/SQLAuto#%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B">快速上手</a>
   <a href="https://space.bilibili.com/437134249/search/video?keyword=apiauto">视频教程</a>
   <a href="http://apijson.cn/sql">在线体验</a>
+  <a href="https://deepwiki.com/TommyLemon/SQLAuto">AI 问答</a>
 </p>
 
 <img width="1440" alt="018AD342-6A7B-4D4E-ACC2-523196580221" src="https://user-images.githubusercontent.com/5738175/189524723-a178d4e8-c2ef-4adb-ac0a-9d4b627f42ad.png">

@@ -194,7 +194,7 @@ https://github.com/TommyLemon/APIAuto/issues
 [Android-ZBLibrary](https://github.com/TommyLemon/Android-ZBLibrary) Android MVP 快速开发框架，Demo 全面，注释详细，使用简单，代码严谨
 
 ### 持续更新
-https://github.com/TommyLemon/SQLAuto/commits/master
+https://github.com/TommyLemon/SQLAuto/commits
 
 
 ### 我要赞赏
